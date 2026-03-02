@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOLISYSTEM - Ultimate V50</title>
+    <title>SOLISYSTEM - Ultimate V51</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -326,7 +326,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzRzIovorVH9oofjA-iilzhywOv6JQ7138yH_XmiyIc_SY9nqlKXG05petJLsOkRtM_/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbwrg0GHKyrOWMPcmP7mDO9xXTkVJEL8WiFgPDFc7Qs_wBr2ne3jtVDD5VLbEhptQpyN/exec"; 
         const STORE_KEY = "SOLISYSTEM_DB_MAIN"; 
         let GLOBAL_DATA = [];
         
@@ -336,7 +336,7 @@
 
         let calendar;
 
-        // --- CUSTOM NATIVE APP DIALOG SYSTEM ---
+        // --- APP DIALOG SYSTEM ---
         function appAlert(title, message, type = 'info') {
             return new Promise((resolve) => {
                 const d = document.getElementById('app-dialog');
@@ -396,7 +396,7 @@
             });
         }
 
-        // --- NEW: THE AUTO-SANITIZER FIX FOR UGLY GOOGLE SHEET DATES ---
+        // --- NEW: THE AUTO-SANITIZER FIX FOR UGLY GOOGLE SHEET DATES & TIMES ---
         function cleanDate(val) {
             if (!val) return "";
             const d = new Date(val);
@@ -404,11 +404,29 @@
             return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
         }
 
+        function cleanTime(val) {
+            if (!val) return "";
+            // Catch the 1899 Google Sheets time ghost!
+            if (val.includes("1899") || val.length > 10) {
+                const d = new Date(val);
+                if (!isNaN(d.getTime())) {
+                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                }
+            }
+            // Handle standard "14:30" or "14:30:00"
+            const parts = String(val).split(':');
+            if (parts.length >= 2) {
+                return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
+            }
+            return val;
+        }
+
         function sanitizeData(dataArray) {
             return dataArray.map(e => {
                 if (e.start) e.start = cleanDate(e.start);
-                if (e.extendedProps && e.extendedProps.dateGiven) {
-                    e.extendedProps.dateGiven = cleanDate(e.extendedProps.dateGiven);
+                if (e.extendedProps) {
+                    if (e.extendedProps.dateGiven) e.extendedProps.dateGiven = cleanDate(e.extendedProps.dateGiven);
+                    if (e.extendedProps.time) e.extendedProps.time = cleanTime(e.extendedProps.time);
                 }
                 return e;
             });
@@ -423,7 +441,6 @@
                     if (localData) localStorage.setItem(STORE_KEY, localData);
                 }
                 if (localData) { 
-                    // Sanitize all data instantly when the app opens!
                     GLOBAL_DATA = sanitizeData(JSON.parse(localData).filter(e => e && e.id && e.extendedProps)); 
                 }
             } catch(e) { GLOBAL_DATA = []; }
@@ -465,11 +482,11 @@
         function getLocalDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
         function getLocalTime() { const d = new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
 
-        // Upgraded Format Date to handle string parsing better
         function formatDate(dateStr) {
             if (!dateStr) return '';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
+            const parts = dateStr.split('-');
+            if(parts.length !== 3) return dateStr;
+            const d = new Date(parts[0], parts[1] - 1, parts[2]);
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
         }
 
@@ -584,7 +601,6 @@
                 }
                 
                 if(result.result === "success") { 
-                    // Sanitize the messy dates coming from Google immediately!
                     GLOBAL_DATA = sanitizeData(result.data);
                     saveDataLocally();
                     await appAlert("Data Restored", "Your data has been successfully restored from Google Sheets.", "success");
@@ -762,7 +778,6 @@
             if (event) {
                 const p = event.extendedProps || {};
                 
-                // Safe date fetching
                 dVal = cleanDate(event.startStr || event.start || dVal);
 
                 document.getElementById('modal-title-text').innerText = "Edit " + event.id;
@@ -773,7 +788,7 @@
                 switchMode(p.type || 'solicitation');
                 if(p.type === 'solicitation') {
                     document.getElementById('description').value = p.description || '';
-                    document.getElementById('time').value = p.time || '';
+                    document.getElementById('time').value = p.time ? cleanTime(p.time) : '';
                     
                     let loadedAddr = p.address || "";
                     if (!loadedAddr && (p.town || p.brgy)) {
@@ -785,15 +800,13 @@
                     document.getElementById('amount').value = p.amount || '';
                     document.getElementById('contact').value = p.contact || '';
                     document.getElementById('person-claimed').value = p.personClaimed || '';
-                    
                     document.getElementById('date-given').value = cleanDate(p.dateGiven);
-                    
                     document.getElementById('released-by').value = p.releasedBy || ''; 
                     toggleAuditFields(); printBtn.classList.remove('hidden');
                 } else {
                     document.getElementById('evt-description').value = p.description || '';
                     document.getElementById('venue').value = p.venue || '';
-                    if(p.time) document.getElementById('time').value = p.time;
+                    if(p.time) document.getElementById('time').value = cleanTime(p.time);
                     printBtn.classList.add('hidden');
                 }
                 delBtn.classList.remove('hidden');
