@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOLISYSTEM - Ultimate V57</title>
+    <title>SOLISYSTEM - Ultimate V59</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -37,17 +37,17 @@
         .fc-button-active { background-color: #e2e8f0 !important; color: #0f172a !important; }
         .fc-event { padding: 2px 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border-radius: 4px; }
         
-        /* CALENDAR EVENT COLOR CODING */
         .evt-solicit { background-color: #fef3c7 !important; border: none !important; border-left: 4px solid #f59e0b !important; }
         .evt-solicit .fc-event-main, .evt-solicit .fc-event-time, .evt-solicit .fc-event-title { color: #92400e !important; font-weight: 700 !important; }
         
         .evt-office { background-color: #eff6ff !important; border: none !important; border-left: 4px solid #3b82f6 !important; }
         .evt-office .fc-event-main, .evt-office .fc-event-time, .evt-office .fc-event-title { color: #1e40af !important; font-weight: 700 !important; }
 
-        /* FIX: Hides the ugly "all-day" term and column in the List View */
+        .evt-hearing { background-color: #dcfce7 !important; border: none !important; border-left: 4px solid #22c55e !important; }
+        .evt-hearing .fc-event-main, .evt-hearing .fc-event-time, .evt-hearing .fc-event-title { color: #166534 !important; font-weight: 700 !important; }
+
         .fc-list-event-time { display: none !important; }
 
-        /* Hides scrollbar on the new single-line header */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -99,7 +99,7 @@
     </div>
 
     <div id="dashboard-modal" class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
-        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform transition-transform scale-100">
+        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden transform transition-transform scale-100">
             <div class="bg-slate-900 px-6 py-4 flex justify-between items-center">
                 <h2 class="text-white font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-chart-pie text-amber-400"></i> Morning Briefing</h2>
                 <button onclick="closeDashboard()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
@@ -110,11 +110,12 @@
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Cash Released (All Time)</p>
                     <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900" id="dash-total-amount">₱0</h1>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">PENDING</p><p class="text-2xl font-bold text-amber-500" id="dash-pending">0</p></div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">RELEASED</p><p class="text-2xl font-bold text-green-600" id="dash-done">0</p></div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">DECLINED</p><p class="text-2xl font-bold text-red-500" id="dash-declined">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">EVENTS AHEAD</p><p class="text-2xl font-bold text-blue-600" id="dash-events">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">EVENTS</p><p class="text-2xl font-bold text-blue-600" id="dash-events">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">HEARINGS</p><p class="text-2xl font-bold text-emerald-600" id="dash-hearings">0</p></div>
                 </div>
                 <button onclick="closeDashboard()" class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-md">Enter Workspace</button>
             </div>
@@ -201,12 +202,13 @@
             </div>
 
             <div id="view-table" class="hidden flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
-                <div class="flex justify-between border-b border-slate-100 bg-white shrink-0 px-2 pt-2 pr-4">
-                    <div class="flex">
+                <div class="flex justify-between border-b border-slate-100 bg-white shrink-0 px-2 pt-2 pr-4 overflow-x-auto no-scrollbar">
+                    <div class="flex shrink-0">
                         <button onclick="switchTableTab('solicitation')" id="tab-sol" class="px-4 py-3 text-sm font-bold border-b-2 border-slate-900 text-slate-900 transition">Solicitations</button>
                         <button onclick="switchTableTab('event')" id="tab-evt" class="px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Events</button>
+                        <button onclick="switchTableTab('hearing')" id="tab-hrg" class="px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Hearings</button>
                     </div>
-                    <button onclick="exportCSV()" class="self-center text-xs bg-green-50 text-green-700 font-bold px-3 py-1.5 rounded flex items-center gap-1 hover:bg-green-100 transition"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                    <button onclick="exportCSV()" class="self-center text-xs bg-green-50 text-green-700 font-bold px-3 py-1.5 rounded flex items-center gap-1 hover:bg-green-100 transition shrink-0 ml-4"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
                 </div>
                 
                 <div class="flex-1 overflow-auto p-4 md:p-6">
@@ -231,6 +233,12 @@
                             <tbody id="tbody-evt" class="divide-y divide-slate-50"></tbody>
                         </table>
                     </div>
+                    <div id="table-hearing" class="hidden">
+                        <table class="w-full text-sm text-left border-collapse responsive-table">
+                            <thead class="text-xs text-slate-400 uppercase border-b border-slate-100"><tr><th class="px-4 py-3 font-semibold w-32">ID</th><th class="px-4 py-3 font-semibold w-32">Date & Time</th><th class="px-4 py-3 font-semibold">Hearing Title</th><th class="px-4 py-3 font-semibold">Venue</th><th class="px-4 py-3 font-semibold">Notes</th></tr></thead>
+                            <tbody id="tbody-hrg" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
@@ -249,14 +257,15 @@
     <div id="entry-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
         <div class="bg-white w-full max-w-2xl max-h-[95vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
             <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-                <div class="flex items-center gap-4">
-                    <h3 class="font-extrabold text-slate-800 text-lg tracking-tight" id="modal-title-text">New Record</h3>
-                    <div class="flex bg-slate-200 p-1 rounded-lg">
+                <div class="flex items-center gap-4 overflow-hidden">
+                    <h3 class="font-extrabold text-slate-800 text-lg tracking-tight hidden md:block" id="modal-title-text">New Record</h3>
+                    <div class="flex bg-slate-200 p-1 rounded-lg shrink-0 overflow-x-auto no-scrollbar">
                         <button type="button" onclick="switchMode('solicitation')" id="btn-solicitation" class="px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition">Solicitation</button>
                         <button type="button" onclick="switchMode('event')" id="btn-event" class="px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition">Event</button>
+                        <button type="button" onclick="switchMode('hearing')" id="btn-hearing" class="px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition">Hearing</button>
                     </div>
                 </div>
-                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"><i class="fa-solid fa-times"></i></button>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition shrink-0 ml-2"><i class="fa-solid fa-times"></i></button>
             </div>
 
             <form id="main-form" onsubmit="event.preventDefault(); saveForm();" class="p-6 overflow-y-auto flex-1 space-y-5">
@@ -300,7 +309,7 @@
                 </div>
 
                 <div id="group-desc-evt" class="hidden">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Event Note</label>
+                    <label id="label-evt-desc" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Event Note</label>
                     <textarea id="evt-description" class="w-full h-24 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition resize-none bg-slate-50 focus:bg-white"></textarea>
                 </div>
 
@@ -535,7 +544,7 @@
             
             initCalendar();
             renderSidebar();
-            renderTable('solicitation');
+            renderTable('solicitation'); 
             
             if(!sessionStorage.getItem('dashboard_seen')) {
                 showDashboard();
@@ -544,25 +553,33 @@
         });
 
         function showDashboard() {
-            let total = 0, pending = 0, done = 0, declined = 0, events = 0;
+            let pending = 0, done = 0, declined = 0, events = 0, hearings = 0;
             const today = getLocalDate();
             
             GLOBAL_DATA.forEach(e => {
                 const p = e.extendedProps || {};
                 if(p.type === 'solicitation') {
-                    if(p.status === 'done') { done++; total += parseFloat(p.amount || 0); }
+                    if(p.status === 'done') done++;
                     else if(p.status === 'pending') pending++;
                     else declined++;
-                } else {
+                } else if(p.type === 'event') {
                     if(e.start >= today) events++;
+                } else if(p.type === 'hearing') {
+                    if(e.start >= today) hearings++;
                 }
             });
 
-            document.getElementById('dash-total-amount').innerText = "₱" + total.toLocaleString('en-US');
             document.getElementById('dash-pending').innerText = pending;
             document.getElementById('dash-done').innerText = done;
             document.getElementById('dash-declined').innerText = declined;
             document.getElementById('dash-events').innerText = events;
+            document.getElementById('dash-hearings').innerText = hearings;
+            
+            let totalAmount = GLOBAL_DATA
+                .filter(x => x.extendedProps && x.extendedProps.type === 'solicitation' && x.extendedProps.status === 'done')
+                .reduce((sum, x) => sum + parseFloat(x.extendedProps.amount || 0), 0);
+            document.getElementById('dash-total-amount').innerText = "₱" + totalAmount.toLocaleString('en-US');
+
             document.getElementById('dashboard-modal').classList.remove('hidden');
         }
         function closeDashboard() { document.getElementById('dashboard-modal').classList.add('hidden'); }
@@ -588,7 +605,7 @@
         }
 
         function generateID(type) {
-            const prefix = type === 'solicitation' ? 'S' : 'E';
+            const prefix = type === 'solicitation' ? 'S' : (type === 'event' ? 'E' : 'H');
             const existingIds = GLOBAL_DATA.filter(x => x && x.id && String(x.id).startsWith(prefix)).map(x => parseInt(String(x.id).substring(1)) || 0);
             const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
             return prefix + String(maxId + 1).padStart(3, '0');
@@ -596,7 +613,12 @@
 
         function saveDataLocally() {
             localStorage.setItem(STORE_KEY, JSON.stringify(GLOBAL_DATA));
-            initCalendar(); renderSidebar(); renderTable(document.getElementById('table-solicitation').classList.contains('hidden') ? 'event' : 'solicitation');
+            initCalendar(); 
+            renderSidebar(); 
+            const activeTab = document.getElementById('entry-type').value; 
+            if(!document.getElementById('table-hearing').classList.contains('hidden')) renderTable('hearing');
+            else if(!document.getElementById('table-event').classList.contains('hidden')) renderTable('event');
+            else renderTable('solicitation');
         }
 
         async function saveForm() {
@@ -747,11 +769,16 @@
         function filterData() {
             const q = document.getElementById('search-input').value.toLowerCase();
             const statusFilter = document.getElementById('table-filter-status').value;
-            renderTable(document.getElementById('table-solicitation').classList.contains('hidden') ? 'event' : 'solicitation', q, statusFilter);
+            
+            if(!document.getElementById('table-hearing').classList.contains('hidden')) renderTable('hearing', q, statusFilter);
+            else if(!document.getElementById('table-event').classList.contains('hidden')) renderTable('event', q, statusFilter);
+            else renderTable('solicitation', q, statusFilter);
         }
 
         function renderTable(type, query = "", statusFilter = "all") {
-            const tbody = type === 'solicitation' ? document.getElementById('tbody-sol') : document.getElementById('tbody-evt'); 
+            const tbodyId = type === 'solicitation' ? 'tbody-sol' : (type === 'event' ? 'tbody-evt' : 'tbody-hrg');
+            const tbody = document.getElementById(tbodyId); 
+            if(!tbody) return;
             tbody.innerHTML = "";
             
             let filtered = GLOBAL_DATA.filter(e => e.extendedProps && e.extendedProps.type === type);
@@ -778,8 +805,12 @@
                 if(type === 'solicitation') {
                     const displayAddr = p.address || [p.brgy, p.town].filter(Boolean).join(', ') || '-';
                     tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${displayAddr}</td><td class="px-4 py-3"><span class="badge status-${p.status}">${p.status}</span></td><td class="px-4 py-3 text-right font-bold text-slate-700">₱${p.amount||0}</td>`;
-                } else {
+                } else if (type === 'event') {
                     const timeDisplay = p.time ? `<br><span class="text-[10px] text-slate-400 font-normal">${formatTime(p.time)}</span>` : '';
+                    tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}${timeDisplay}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${p.venue||'-'}</td><td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">${p.description||'-'}</td>`;
+                } else if (type === 'hearing') {
+                    const timeDisplay = p.time ? `<br><span class="text-[10px] text-slate-400 font-normal">${formatTime(p.time)}</span>` : '';
+                    // ADDED VENUE FOR HEARINGS HERE IN THE TABLE
                     tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}${timeDisplay}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${p.venue||'-'}</td><td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">${p.description||'-'}</td>`;
                 }
                 tbody.appendChild(tr);
@@ -787,7 +818,10 @@
         }
 
         function exportCSV() {
-            const type = document.getElementById('table-solicitation').classList.contains('hidden') ? 'event' : 'solicitation';
+            let type = 'solicitation';
+            if(!document.getElementById('table-hearing').classList.contains('hidden')) type = 'hearing';
+            else if(!document.getElementById('table-event').classList.contains('hidden')) type = 'event';
+
             const q = document.getElementById('search-input').value.toLowerCase();
             const statusFilter = document.getElementById('table-filter-status').value;
             
@@ -795,16 +829,21 @@
             if(q) filtered = filtered.filter(e => (`${e.title} ${e.id} ${e.extendedProps.address || e.extendedProps.town}`).toLowerCase().includes(q));
             if(type === 'solicitation' && statusFilter !== 'all') filtered = filtered.filter(e => e.extendedProps.status === statusFilter);
 
-            let csv = type === 'solicitation' 
-                ? "ID,Date,Client,Address,Contact,Status,Amount,DateReleased,ClaimedBy,ReleasedBy\n"
-                : "ID,Date,Time,Event Name,Venue,Notes\n";
+            let csv = "";
+            if(type === 'solicitation') csv = "ID,Date,Client,Address,Contact,Status,Amount,DateReleased,ClaimedBy,ReleasedBy\n";
+            else if(type === 'event') csv = "ID,Date,Time,Event Name,Venue,Notes\n";
+            // ADDED VENUE TO HEARING CSV EXPORT HERE
+            else if(type === 'hearing') csv = "ID,Date,Time,Hearing Title,Venue,Notes\n";
 
             filtered.forEach(e => {
                 const p = e.extendedProps || {};
                 if(type === 'solicitation') {
                     const expAddr = p.address || [p.brgy, p.town].filter(Boolean).join(', ') || '';
                     csv += `${e.id},${e.start},"${e.title}","${expAddr}","${p.contact||''}",${p.status},${p.amount||0},${p.dateGiven||''},"${p.personClaimed||''}","${p.releasedBy||''}"\n`;
-                } else {
+                } else if(type === 'event') {
+                    csv += `${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;
+                } else if(type === 'hearing') {
+                    // EXPORT VENUE DATA FOR HEARINGS
                     csv += `${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;
                 }
             });
@@ -822,8 +861,13 @@
                 initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
                 headerToolbar: { left: 'prev,next', center: 'title', right: window.innerWidth <768 ? 'today' : 'dayGridMonth,listWeek,today' },
                 height: '100%', events: GLOBAL_DATA,
-                allDayText: '', // FIX: FullCalendar config to remove 'all-day' text
-                eventClassNames: (arg) => { const p = arg.event.extendedProps || {}; return p.type === 'solicitation' ? ['evt-solicit'] : ['evt-office']; },
+                allDayText: '', 
+                eventClassNames: (arg) => { 
+                    const p = arg.event.extendedProps || {}; 
+                    if(p.type === 'solicitation') return ['evt-solicit'];
+                    if(p.type === 'hearing') return ['evt-hearing'];
+                    return ['evt-office']; 
+                },
                 dateClick: (info) => openModal(null, info.dateStr),
                 eventClick: (info) => openModal(info.event)
             });
@@ -837,11 +881,21 @@
         }
         
         function switchMode(mode) {
-            document.getElementById('entry-type').value = mode; const isSol = mode === 'solicitation';
+            document.getElementById('entry-type').value = mode; 
+            const isSol = mode === 'solicitation';
+            const isEvt = mode === 'event';
+            const isHrg = mode === 'hearing';
+            
             const toggle = (id, show) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden', !show); }
             
-            toggle('group-desc-sol', isSol); toggle('group-address', isSol); toggle('group-contact', isSol); toggle('btn-print', isSol);
-            toggle('group-desc-evt', !isSol); toggle('field-venue', !isSol);
+            toggle('group-desc-sol', isSol); 
+            toggle('group-address', isSol); 
+            toggle('group-contact', isSol); 
+            toggle('btn-print', isSol);
+            
+            toggle('group-desc-evt', isEvt || isHrg); 
+            // SHOW VENUE FOR BOTH EVENTS AND HEARINGS HERE
+            toggle('field-venue', isEvt || isHrg); 
             
             const wrapper = document.getElementById('processing-wrapper');
             const isNew = !document.getElementById('entry-id').value;
@@ -851,9 +905,12 @@
                 else { document.getElementById('processing-fields').classList.remove('hidden'); document.getElementById('btn-show-processing').classList.add('hidden'); }
             } else { wrapper.classList.add('hidden'); }
 
-            document.getElementById('label-title').innerText = isSol ? "Name of Solicitor" : "Event Name";
+            document.getElementById('label-title').innerText = isSol ? "Name of Solicitor" : (isEvt ? "Event Name" : "Hearing Title");
+            document.getElementById('label-evt-desc').innerText = isHrg ? "Notes / Description" : "Event Note";
+
             document.getElementById('btn-solicitation').className = isSol ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
-            document.getElementById('btn-event').className = !isSol ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
+            document.getElementById('btn-event').className = isEvt ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
+            document.getElementById('btn-hearing').className = isHrg ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
         }
 
         function revealProcessing() {
@@ -895,8 +952,14 @@
                     document.getElementById('date-given').value = cleanDate(p.dateGiven);
                     document.getElementById('released-by').value = p.releasedBy || ''; 
                     toggleAuditFields(); printBtn.classList.remove('hidden');
-                } else {
+                } else if(p.type === 'event') {
                     document.getElementById('evt-description').value = p.description || '';
+                    document.getElementById('venue').value = p.venue || '';
+                    if(p.time) document.getElementById('time').value = cleanTime(p.time);
+                    printBtn.classList.add('hidden');
+                } else if(p.type === 'hearing') {
+                    document.getElementById('evt-description').value = p.description || '';
+                    // LOAD VENUE FOR HEARINGS HERE
                     document.getElementById('venue').value = p.venue || '';
                     if(p.time) document.getElementById('time').value = cleanTime(p.time);
                     printBtn.classList.add('hidden');
@@ -907,7 +970,12 @@
                 document.getElementById('entry-id').value = "";
                 document.getElementById('date').value = dVal;
                 document.getElementById('time').value = getLocalTime();
-                switchMode('solicitation');
+                
+                let defaultMode = 'solicitation';
+                if(!document.getElementById('table-hearing').classList.contains('hidden')) defaultMode = 'hearing';
+                else if(!document.getElementById('table-event').classList.contains('hidden')) defaultMode = 'event';
+                
+                switchMode(defaultMode);
                 if(document.getElementById('address')) document.getElementById('address').value = "";
                 toggleAuditFields(); delBtn.classList.add('hidden'); printBtn.classList.add('hidden');
             }
@@ -952,42 +1020,59 @@
             if(v === 'calendar'){ c.classList.remove('hidden'); t.classList.add('hidden'); btnC.className = "btn-toggle-view btn-active"; btnT.className = "btn-toggle-view btn-inactive"; calendar.render(); } 
             else { c.classList.add('hidden'); t.classList.remove('hidden'); btnC.className = "btn-toggle-view btn-inactive"; btnT.className = "btn-toggle-view btn-active"; filterData(); } 
         }
+        
         function switchTableTab(t) { 
             document.getElementById('table-solicitation').classList.toggle('hidden', t !== 'solicitation');
-            document.getElementById('table-event').classList.toggle('hidden', t === 'solicitation');
+            document.getElementById('table-event').classList.toggle('hidden', t === 'event');
+            document.getElementById('table-hearing').classList.toggle('hidden', t === 'hearing');
             document.getElementById('table-filter-status').classList.toggle('hidden', t !== 'solicitation'); 
-            const bs = document.getElementById('tab-sol'); const be = document.getElementById('tab-evt');
-            if(t === 'solicitation') { bs.className = "px-4 py-3 text-sm font-bold border-b-2 border-slate-900 text-slate-900 transition"; be.className = "px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition"; } 
-            else { be.className = "px-4 py-3 text-sm font-bold border-b-2 border-slate-900 text-slate-900 transition"; bs.className = "px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition"; }
+            
+            const tabs = ['sol', 'evt', 'hrg'];
+            tabs.forEach(tab => {
+                const btn = document.getElementById(`tab-${tab}`);
+                if(btn) {
+                    if((t === 'solicitation' && tab === 'sol') || (t === 'event' && tab === 'evt') || (t === 'hearing' && tab === 'hrg')) {
+                        btn.className = "px-4 py-3 text-sm font-bold border-b-2 border-slate-900 text-slate-900 transition";
+                    } else {
+                        btn.className = "px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
+                    }
+                }
+            });
             filterData();
         }
         
         function renderSidebar() {
             const list = document.getElementById('upcoming-list'); list.innerHTML = '';
             const todayStr = getLocalDate();
-            const upcomingEvents = GLOBAL_DATA.filter(e => e.start >= todayStr && e.extendedProps && e.extendedProps.type === 'event').sort((a,b) => new Date(a.start) - new Date(b.start));
+            // Show both events and hearings in the upcoming list
+            const upcomingEvents = GLOBAL_DATA.filter(e => e.start >= todayStr && e.extendedProps && (e.extendedProps.type === 'event' || e.extendedProps.type === 'hearing')).sort((a,b) => new Date(a.start) - new Date(b.start));
 
-            if(upcomingEvents.length === 0) { list.innerHTML = '<p class="text-xs text-slate-400 text-center italic mt-4">No upcoming events.</p>'; return; }
+            if(upcomingEvents.length === 0) { list.innerHTML = '<p class="text-xs text-slate-400 text-center italic mt-4">No upcoming events or hearings.</p>'; return; }
 
             upcomingEvents.slice(0, 8).forEach(e => {
                 const diffTime = Math.abs(new Date(e.start) - new Date(todayStr));
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                const p = e.extendedProps || {};
                 
                 let borderColor = 'border-slate-300';
                 let alertIcon = '';
+                let typeBadge = '';
                 
+                if(p.type === 'hearing') {
+                    typeBadge = '<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[8px] font-bold ml-1 align-middle">HEARING</span>';
+                }
+
                 if(diffDays <= 1) { borderColor = 'border-red-500'; alertIcon = '<i class="fa-solid fa-circle-exclamation text-red-500 float-right"></i>'; }
                 else if (diffDays === 2) { borderColor = 'border-amber-400'; alertIcon = '<i class="fa-solid fa-triangle-exclamation text-amber-500 float-right"></i>'; }
-                else { borderColor = 'border-blue-400'; }
+                else { borderColor = p.type === 'hearing' ? 'border-green-400' : 'border-blue-400'; }
 
-                const p = e.extendedProps || {};
                 const venueHtml = p.venue ? `<div class="text-[10px] text-slate-500 mt-1 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${p.venue}</div>` : '';
                 const timeDisplay = p.time ? formatTime(p.time) + ' • ' : '';
                 
                 list.innerHTML += `
                     <div class="border-l-4 ${borderColor} pl-3 py-2 bg-white rounded shadow-sm border-y border-r border-slate-100 pr-3 cursor-pointer hover:bg-slate-50" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))">
                         <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">${timeDisplay}${formatDate(e.start)} ${alertIcon}</div>
-                        <div class="font-bold text-xs text-slate-800 leading-snug">${e.title}</div>
+                        <div class="font-bold text-xs text-slate-800 leading-snug">${e.title} ${typeBadge}</div>
                         ${venueHtml}
                     </div>
                 `;
