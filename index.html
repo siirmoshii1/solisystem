@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOLISYSTEM - Ultimate V59</title>
+    <title>SOLISYSTEM - Ultimate V64</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
@@ -114,8 +114,8 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">PENDING</p><p class="text-2xl font-bold text-amber-500" id="dash-pending">0</p></div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">RELEASED</p><p class="text-2xl font-bold text-green-600" id="dash-done">0</p></div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">DECLINED</p><p class="text-2xl font-bold text-red-500" id="dash-declined">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">EVENTS</p><p class="text-2xl font-bold text-blue-600" id="dash-events">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">HEARINGS</p><p class="text-2xl font-bold text-emerald-600" id="dash-hearings">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">TOTAL EVENTS</p><p class="text-2xl font-bold text-blue-600" id="dash-events">0</p></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">TOTAL HEARINGS</p><p class="text-2xl font-bold text-emerald-600" id="dash-hearings">0</p></div>
                 </div>
                 <button onclick="closeDashboard()" class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-md">Enter Workspace</button>
             </div>
@@ -554,7 +554,6 @@
 
         function showDashboard() {
             let pending = 0, done = 0, declined = 0, events = 0, hearings = 0;
-            const today = getLocalDate();
             
             GLOBAL_DATA.forEach(e => {
                 const p = e.extendedProps || {};
@@ -563,9 +562,9 @@
                     else if(p.status === 'pending') pending++;
                     else declined++;
                 } else if(p.type === 'event') {
-                    if(e.start >= today) events++;
+                    events++; 
                 } else if(p.type === 'hearing') {
-                    if(e.start >= today) hearings++;
+                    hearings++; 
                 }
             });
 
@@ -582,6 +581,7 @@
 
             document.getElementById('dashboard-modal').classList.remove('hidden');
         }
+        
         function closeDashboard() { document.getElementById('dashboard-modal').classList.add('hidden'); }
 
         function getLocalDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -615,10 +615,12 @@
             localStorage.setItem(STORE_KEY, JSON.stringify(GLOBAL_DATA));
             initCalendar(); 
             renderSidebar(); 
-            const activeTab = document.getElementById('entry-type').value; 
-            if(!document.getElementById('table-hearing').classList.contains('hidden')) renderTable('hearing');
-            else if(!document.getElementById('table-event').classList.contains('hidden')) renderTable('event');
-            else renderTable('solicitation');
+            
+            let activeType = 'solicitation';
+            if(!document.getElementById('table-hearing').classList.contains('hidden')) activeType = 'hearing';
+            else if(!document.getElementById('table-event').classList.contains('hidden')) activeType = 'event';
+            
+            renderTable(activeType, document.getElementById('search-input').value.toLowerCase(), document.getElementById('table-filter-status').value);
         }
 
         async function saveForm() {
@@ -688,6 +690,7 @@
             }
         }
 
+        // ====== FIXED DOWNLOAD ROUTE: Uses the standard secure GET method ======
         async function downloadFromCloud() {
             const confirmed = await appConfirm("Restore from Cloud", "WARNING: This will replace your tablet's current data with the data from Google Sheets. Are you sure you want to overwrite?", "Overwrite Data", "warning");
             if(!confirmed) return;
@@ -702,15 +705,16 @@
             }
 
             try {
-                const cacheBuster = "?t=" + new Date().getTime();
-                const response = await fetch(API_URL + cacheBuster, { method: 'GET', redirect: 'follow' });
+                // FIXED: We now use the proper GET door to fetch data safely.
+                const cacheBuster = "?action=download&t=" + new Date().getTime();
+                const response = await fetch(API_URL + cacheBuster, { method: 'GET' });
                 const text = await response.text(); 
                 
                 let result;
                 try {
                     result = JSON.parse(text);
                 } catch(e) {
-                    throw new Error("Google did not return valid data. Please ensure you deployed the script as a 'New Version'.");
+                    throw new Error("Google did not return valid data. Please ensure your script is deployed as a 'New Version'.");
                 }
                 
                 if(result.result === "success") { 
@@ -770,9 +774,11 @@
             const q = document.getElementById('search-input').value.toLowerCase();
             const statusFilter = document.getElementById('table-filter-status').value;
             
-            if(!document.getElementById('table-hearing').classList.contains('hidden')) renderTable('hearing', q, statusFilter);
-            else if(!document.getElementById('table-event').classList.contains('hidden')) renderTable('event', q, statusFilter);
-            else renderTable('solicitation', q, statusFilter);
+            let activeType = 'solicitation';
+            if(!document.getElementById('table-hearing').classList.contains('hidden')) activeType = 'hearing';
+            else if(!document.getElementById('table-event').classList.contains('hidden')) activeType = 'event';
+            
+            renderTable(activeType, q, statusFilter);
         }
 
         function renderTable(type, query = "", statusFilter = "all") {
@@ -810,7 +816,6 @@
                     tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}${timeDisplay}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${p.venue||'-'}</td><td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">${p.description||'-'}</td>`;
                 } else if (type === 'hearing') {
                     const timeDisplay = p.time ? `<br><span class="text-[10px] text-slate-400 font-normal">${formatTime(p.time)}</span>` : '';
-                    // ADDED VENUE FOR HEARINGS HERE IN THE TABLE
                     tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}${timeDisplay}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${p.venue||'-'}</td><td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">${p.description||'-'}</td>`;
                 }
                 tbody.appendChild(tr);
@@ -832,7 +837,6 @@
             let csv = "";
             if(type === 'solicitation') csv = "ID,Date,Client,Address,Contact,Status,Amount,DateReleased,ClaimedBy,ReleasedBy\n";
             else if(type === 'event') csv = "ID,Date,Time,Event Name,Venue,Notes\n";
-            // ADDED VENUE TO HEARING CSV EXPORT HERE
             else if(type === 'hearing') csv = "ID,Date,Time,Hearing Title,Venue,Notes\n";
 
             filtered.forEach(e => {
@@ -843,7 +847,6 @@
                 } else if(type === 'event') {
                     csv += `${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;
                 } else if(type === 'hearing') {
-                    // EXPORT VENUE DATA FOR HEARINGS
                     csv += `${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;
                 }
             });
@@ -894,7 +897,6 @@
             toggle('btn-print', isSol);
             
             toggle('group-desc-evt', isEvt || isHrg); 
-            // SHOW VENUE FOR BOTH EVENTS AND HEARINGS HERE
             toggle('field-venue', isEvt || isHrg); 
             
             const wrapper = document.getElementById('processing-wrapper');
@@ -959,7 +961,6 @@
                     printBtn.classList.add('hidden');
                 } else if(p.type === 'hearing') {
                     document.getElementById('evt-description').value = p.description || '';
-                    // LOAD VENUE FOR HEARINGS HERE
                     document.getElementById('venue').value = p.venue || '';
                     if(p.time) document.getElementById('time').value = cleanTime(p.time);
                     printBtn.classList.add('hidden');
@@ -1023,8 +1024,8 @@
         
         function switchTableTab(t) { 
             document.getElementById('table-solicitation').classList.toggle('hidden', t !== 'solicitation');
-            document.getElementById('table-event').classList.toggle('hidden', t === 'event');
-            document.getElementById('table-hearing').classList.toggle('hidden', t === 'hearing');
+            document.getElementById('table-event').classList.toggle('hidden', t !== 'event');
+            document.getElementById('table-hearing').classList.toggle('hidden', t !== 'hearing');
             document.getElementById('table-filter-status').classList.toggle('hidden', t !== 'solicitation'); 
             
             const tabs = ['sol', 'evt', 'hrg'];
@@ -1044,7 +1045,7 @@
         function renderSidebar() {
             const list = document.getElementById('upcoming-list'); list.innerHTML = '';
             const todayStr = getLocalDate();
-            // Show both events and hearings in the upcoming list
+            
             const upcomingEvents = GLOBAL_DATA.filter(e => e.start >= todayStr && e.extendedProps && (e.extendedProps.type === 'event' || e.extendedProps.type === 'hearing')).sort((a,b) => new Date(a.start) - new Date(b.start));
 
             if(upcomingEvents.length === 0) { list.innerHTML = '<p class="text-xs text-slate-400 text-center italic mt-4">No upcoming events or hearings.</p>'; return; }
