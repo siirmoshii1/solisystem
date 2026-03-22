@@ -3,1082 +3,1163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOLISYSTEM - Ultimate V64</title>
-    
+    <title>SOLISYSTEM - Office 2 (V3)</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- iOS PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SOLISYSTEM">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+
+    <!-- Android PWA -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="SOLISYSTEM">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
-
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        
-        @media (max-width: 768px) {
-            .responsive-table thead { display: none; }
-            .responsive-table tbody tr { display: block; border-bottom: 1px solid #e2e8f0; padding: 1rem 0; }
-            .responsive-table tbody td { display: flex; justify-content: space-between; padding: 0.25rem 0; border-bottom: none; }
-            .responsive-table td::before { content: attr(data-label); font-weight: 700; color: #64748b; text-transform: uppercase; font-size: 0.7rem; margin-right: 1rem; }
-        }
-        
-        .btn-toggle-view { padding: 8px 16px; font-size: 0.875rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; }
-        .btn-active { background-color: #0f172a; color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .btn-inactive { background-color: transparent; color: #64748b; }
-        
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
-        .status-pending { background-color: #fef3c7; color: #b45309; }
-        .status-done { background-color: #dcfce7; color: #15803d; }
-        .status-declined { background-color: #fee2e2; color: #b91c1c; }
-        
-        .fc-toolbar-title { font-size: 1.1rem !important; font-weight: 800; color: #0f172a; }
-        .fc-button-primary { background-color: #f1f5f9 !important; border-color: #e2e8f0 !important; color: #475569 !important; font-weight: 600 !important; text-transform: capitalize !important; }
-        .fc-button-active { background-color: #e2e8f0 !important; color: #0f172a !important; }
-        .fc-event { padding: 2px 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; border-radius: 4px; }
-        
-        .evt-solicit { background-color: #fef3c7 !important; border: none !important; border-left: 4px solid #f59e0b !important; }
-        .evt-solicit .fc-event-main, .evt-solicit .fc-event-time, .evt-solicit .fc-event-title { color: #92400e !important; font-weight: 700 !important; }
-        
-        .evt-office { background-color: #eff6ff !important; border: none !important; border-left: 4px solid #3b82f6 !important; }
-        .evt-office .fc-event-main, .evt-office .fc-event-time, .evt-office .fc-event-title { color: #1e40af !important; font-weight: 700 !important; }
-
-        .evt-hearing { background-color: #dcfce7 !important; border: none !important; border-left: 4px solid #22c55e !important; }
-        .evt-hearing .fc-event-main, .evt-hearing .fc-event-time, .evt-hearing .fc-event-title { color: #166534 !important; font-weight: 700 !important; }
-
-        .fc-list-event-time { display: none !important; }
-
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f1f5f9; color: #1e293b; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; width: 100%; } @page { size: A4; margin: 0.5in; } }
+        /* ══════════════════════════════════════════
+           HEADER — two rows on mobile, one row on desktop
+        ══════════════════════════════════════════ */
+        header { background: #fff; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; z-index: 30; }
+
+        /* Row 1: Logo + primary CTA buttons — always visible */
+        .hdr-row1 {
+            display: flex; align-items: center; gap: 8px;
+            padding: 0 12px; height: 52px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        /* Row 2: Tools row — mobile only */
+        .hdr-row2 {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 12px;
+            overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none;
+        }
+        .hdr-row2::-webkit-scrollbar { display: none; }
+
+        /* On ≥900px: collapse to single row, hide row2, show inline controls */
+        @media (min-width: 900px) {
+            .hdr-row1 { border-bottom: none; height: 58px; padding: 0 16px; }
+            .hdr-row2 { display: none !important; }
+            .hdr-inline { display: flex !important; }
+            .hdr-mobile-cta { display: none !important; }
+        }
+
+        /* Inline controls for desktop — hidden on mobile */
+        .hdr-inline {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        /* Logo */
+        .logo-group { display: flex; align-items: center; gap: 10px; text-decoration: none; flex-shrink: 0; }
+
+        /* Office info — hidden on mobile */
+        .office-block { display: none; flex-direction: column; border-left: 2px solid #e2e8f0; padding-left: 12px; flex-shrink: 0; }
+        .office-block .oname { font-size: 12px; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; }
+        .office-block .osub { font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+        @media (min-width: 600px) { .office-block { display: flex; } }
+
+        .h-spacer { flex: 1; min-width: 4px; }
+
+        /* ── BUTTONS ── */
+        .hbtn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 7px 10px; border-radius: 8px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; border: none; transition: background .15s, color .15s; white-space: nowrap; line-height: 1; flex-shrink: 0; }
+        .hbtn-icon { width: 34px; height: 34px; padding: 0; background: #f1f5f9; color: #64748b; }
+        .hbtn-icon:hover, .hbtn-icon:active { background: #e2e8f0; color: #0f172a; }
+        /* Compact icon buttons used in row2 */
+        .hbtn-sm { width: 32px; height: 32px; padding: 0; background: #f1f5f9; color: #64748b; font-size: 11.5px; }
+        .hbtn-sm:hover, .hbtn-sm:active { background: #e2e8f0; color: #0f172a; }
+        .hbtn-upload { background: #2563eb; color: #fff; }
+        .hbtn-upload:hover, .hbtn-upload:active { background: #1d4ed8; }
+        .hbtn-new { background: #0f172a; color: #fff; }
+        .hbtn-new:hover, .hbtn-new:active { background: #1e293b; }
+
+        /* View toggle */
+        .view-toggle { display: flex; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+        .vtbtn { padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; background: transparent; color: #64748b; transition: all .15s; white-space: nowrap; }
+        .vtbtn.active { background: #0f172a; color: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+
+        /* Search */
+        .search-box { position: relative; flex-shrink: 0; }
+        .search-box i { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 11px; pointer-events: none; }
+        .search-box input { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 10px 7px 28px; font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; outline: none; width: 140px; transition: border .15s, width .2s; }
+        .search-box input:focus { border-color: #94a3b8; width: 180px; }
+        .search-box input::placeholder { color: #94a3b8; }
+
+        .filter-sel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 8px; font-size: 11.5px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; color: #475569; outline: none; cursor: pointer; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 7px center; background-color: #f8fafc; padding-right: 22px; flex-shrink: 0; }
+        .filter-sel option { background: #fff; }
+
+        /* ══════════════════════════════════════════ BODY */
+        .app-body { flex: 1; display: flex; overflow: hidden; position: relative; }
+
+        /* ══════════════════════════════════════════ SIDEBAR */
+        #sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 260px; background: #fff; border-right: 1px solid #e2e8f0; z-index: 200; transform: translateX(-100%); transition: transform .25s cubic-bezier(.4,0,.2,1); display: flex; flex-direction: column; padding: 20px 16px; box-shadow: 4px 0 24px rgba(0,0,0,.12); overflow-y: auto; }
+        #sidebar.open { transform: translateX(0); }
+        .sb-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-top: 20px; margin-bottom: 8px; }
+        .sb-title:first-of-type { margin-top: 44px; }
+        .sb-btn { width: 100%; display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 9px; font-size: 12.5px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc; color: #475569; margin-bottom: 6px; transition: all .15s; text-align: left; }
+        .sb-btn:hover { background: #f1f5f9; color: #0f172a; border-color: #cbd5e1; }
+        .sb-btn.blue { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .sb-btn.blue:hover { background: #dbeafe; }
+        .sb-btn.green { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
+        .sb-btn.green:hover { background: #dcfce7; }
+        .sb-btn.danger { background: transparent; color: #ef4444; border-color: transparent; font-size: 11px; }
+        .sb-btn.danger:hover { background: #fef2f2; }
+        .sb-close { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; border-radius: 7px; border: 1px solid #e2e8f0; background: #f1f5f9; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 12px; transition: all .15s; }
+        .sb-close:hover { background: #e2e8f0; color: #0f172a; }
+        #overlay { position: fixed; inset: 0; background: rgba(15,23,42,.4); backdrop-filter: blur(3px); z-index: 150; opacity: 0; pointer-events: none; transition: opacity .25s; }
+        #overlay.show { opacity: 1; pointer-events: all; }
+
+        /* ══════════════════════════════════════════ MAIN */
+        main { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
+        @media (min-width: 640px) { main { padding: 16px; } }
+        @media (min-width: 900px) { main { padding: 20px; } }
+
+        /* ── CALENDAR ── */
+        #view-calendar { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px; min-height: 420px; overflow: hidden; }
+        @media (min-width: 640px) { #view-calendar { padding: 16px; } }
+        #calendar { height: 100%; min-height: 400px; }
+        .fc { font-family: 'Plus Jakarta Sans', sans-serif !important; }
+        .fc-toolbar-title { font-size: 1rem !important; font-weight: 800 !important; color: #0f172a !important; }
+        .fc-button-primary { background: #f1f5f9 !important; border: 1px solid #e2e8f0 !important; color: #475569 !important; font-weight: 700 !important; font-size: 11px !important; text-transform: capitalize !important; border-radius: 7px !important; padding: 5px 10px !important; box-shadow: none !important; }
+        .fc-button-primary:hover { background: #e2e8f0 !important; color: #0f172a !important; }
+        .fc-button-active, .fc-button-primary:not(:disabled):active { background: #0f172a !important; color: #fff !important; border-color: #0f172a !important; }
+        .fc-col-header-cell-cushion { font-size: 10px !important; font-weight: 700 !important; color: #64748b !important; text-transform: uppercase !important; letter-spacing: .06em; }
+        .fc-daygrid-day-number { font-size: 11px !important; color: #64748b !important; font-weight: 600 !important; }
+        .fc-day-today { background: #fefce8 !important; }
+        .fc-day-today .fc-daygrid-day-number { color: #b45309 !important; font-weight: 800 !important; }
+        .fc-daygrid-day, .fc-scrollgrid, .fc-scrollgrid td, .fc-scrollgrid th { border-color: #f1f5f9 !important; }
+        .fc-list-event:hover td { background: #f8fafc !important; }
+        .fc-list-day-cushion { background: #f8fafc !important; }
+        .fc-list-event-time { display: none !important; }
+        .fc-list-empty { background: #fff !important; color: #94a3b8 !important; }
+        .fc-event { border-radius: 5px !important; padding: 2px 5px !important; font-size: 10.5px !important; font-weight: 700 !important; cursor: pointer; }
+        .evt-solicit { background: #fef3c7 !important; border: none !important; border-left: 3px solid #f59e0b !important; }
+        .evt-solicit .fc-event-main { color: #92400e !important; }
+        .evt-office { background: #eff6ff !important; border: none !important; border-left: 3px solid #3b82f6 !important; }
+        .evt-office .fc-event-main { color: #1e40af !important; }
+        .evt-hearing { background: #dcfce7 !important; border: none !important; border-left: 3px solid #22c55e !important; }
+        .evt-hearing .fc-event-main { color: #166534 !important; }
+
+        /* ── TABLE ── */
+        #view-table { display: none; flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; flex-direction: column; min-height: 0; }
+        .tbl-tabs { display: flex; border-bottom: 1px solid #f1f5f9; padding: 0 10px; align-items: flex-end; justify-content: space-between; flex-shrink: 0; overflow-x: auto; }
+        .tbl-tabs::-webkit-scrollbar { display: none; }
+        .tab-nav { display: flex; gap: 0; }
+        .tab-btn { padding: 12px 12px 10px; font-size: 11px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; color: #94a3b8; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; transition: all .15s; margin-bottom: -1px; white-space: nowrap; display: flex; align-items: center; gap: 5px; }
+        .tab-btn.active { color: #0f172a; border-bottom-color: #0f172a; }
+        .tab-btn:hover:not(.active) { color: #475569; }
+        .tab-count { background: #f1f5f9; color: #94a3b8; font-size: 9.5px; font-weight: 800; padding: 1px 5px; border-radius: 20px; }
+        .tab-btn.active .tab-count { background: #0f172a; color: #fff; }
+        .tbl-scroll { flex: 1; overflow: auto; }
+        table.data-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        table.data-tbl thead th { padding: 10px 14px; text-align: left; font-size: 9.5px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; background: #fff; z-index: 2; white-space: nowrap; }
+        table.data-tbl tbody tr { border-bottom: 1px solid #f8fafc; cursor: pointer; transition: background .1s; }
+        table.data-tbl tbody tr:hover { background: #f8fafc; }
+        table.data-tbl tbody tr:last-child { border-bottom: none; }
+        table.data-tbl td { padding: 11px 14px; vertical-align: middle; }
+        @media (max-width: 639px) {
+            table.data-tbl thead { display: none; }
+            table.data-tbl tbody tr { display: flex; flex-wrap: wrap; padding: 12px 14px; gap: 4px; border-bottom: 1px solid #f1f5f9; }
+            table.data-tbl td { display: block; padding: 0; border: none; }
+            table.data-tbl td.td-id-c     { order: 1; flex: 0 0 auto; }
+            table.data-tbl td.td-status-c  { order: 2; flex: 1; text-align: right; }
+            table.data-tbl td.td-name-c    { order: 3; flex: 0 0 100%; }
+            table.data-tbl td.td-addr-c    { order: 4; flex: 0 0 100%; }
+            table.data-tbl td.td-date-c    { order: 5; flex: 1; }
+            table.data-tbl td.td-amt-c     { order: 6; flex: 0 0 auto; }
+            table.data-tbl td.td-evt-id    { order: 1; flex: 0 0 auto; }
+            table.data-tbl td.td-evt-date  { order: 2; flex: 1; text-align: right; }
+            table.data-tbl td.td-evt-name  { order: 3; flex: 0 0 100%; }
+            table.data-tbl td.td-evt-venue { order: 4; flex: 0 0 100%; }
+            table.data-tbl td.td-evt-notes { display: none; }
+        }
+        .td-id   { font-family: 'Plus Jakarta Sans', monospace; font-size: 10px; font-weight: 700; color: #94a3b8; }
+        .td-name { font-weight: 700; color: #0f172a; }
+        .td-sub  { font-size: 10.5px; color: #94a3b8; margin-top: 2px; }
+        .td-date { font-weight: 600; color: #475569; font-size: 11.5px; white-space: nowrap; }
+        .td-addr { font-size: 11.5px; color: #64748b; }
+        .td-amt  { font-weight: 800; color: #0f172a; text-align: right; white-space: nowrap; }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+        .badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
+        .badge-pending  { background:#fef3c7; color:#b45309; }
+        .badge-done     { background:#dcfce7; color:#15803d; }
+        .badge-declined { background:#fee2e2; color:#b91c1c; }
+        .badge-event    { background:#eff6ff; color:#1d4ed8; }
+        .badge-hearing  { background:#dcfce7; color:#15803d; }
+        .empty-state { padding: 40px 20px; text-align: center; color: #94a3b8; }
+        .empty-state i { font-size: 26px; display: block; margin-bottom: 10px; }
+        .empty-state p { font-size: 13px; font-weight: 600; }
+
+        /* ══════════════════════════════════════════ RIGHT PANEL */
+        #right-panel { width: 268px; background: #fff; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; flex-shrink: 0; transition: width .3s, opacity .3s; overflow: hidden; }
+        #right-panel.rp-hidden { width: 0; opacity: 0; pointer-events: none; }
+        @media (max-width: 900px) {
+            #right-panel { position: fixed; bottom: 0; left: 0; right: 0; width: 100% !important; max-height: 55vh; border-left: none; border-top: 1px solid #e2e8f0; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 24px rgba(0,0,0,.1); z-index: 100; transform: translateY(0); transition: transform .3s, opacity .3s; opacity: 1; }
+            #right-panel.rp-hidden { transform: translateY(100%); opacity: 0; pointer-events: none; width: 100% !important; }
+        }
+        @media (min-width: 900px) {
+            #right-panel { position: relative; bottom: auto; left: auto; right: auto; transform: none; max-height: none; border-radius: 0; box-shadow: none; border-top: none; border-left: 1px solid #e2e8f0; opacity: 1; }
+            #right-panel.rp-hidden { width: 0 !important; opacity: 0; transform: none; }
+        }
+        @media (min-width: 1280px) { #right-panel { width: 288px; } }
+        .rp-handle { display: none; width: 36px; height: 4px; background: #cbd5e1; border-radius: 2px; margin: 8px auto 0; flex-shrink: 0; }
+        @media (max-width: 900px) { .rp-handle { display: block; } }
+        .rp-header { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .rp-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: #64748b; display: flex; align-items: center; gap: 7px; }
+        #upcoming-list { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
+        .sched-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; cursor: pointer; transition: all .15s; border-left-width: 3px; }
+        .sched-item:hover { background: #f1f5f9; transform: translateX(2px); }
+        .sched-item.urgent    { border-left-color: #ef4444; }
+        .sched-item.soon      { border-left-color: #f59e0b; }
+        .sched-item.is-hearing{ border-left-color: #22c55e; }
+        .sched-item.is-event  { border-left-color: #3b82f6; }
+        .sched-meta  { font-size: 9.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+        .sched-name  { font-size: 12.5px; font-weight: 700; color: #0f172a; line-height: 1.3; }
+        .sched-venue { font-size: 11px; color: #64748b; margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+
+        /* ══════════════════════════════════════════ MODALS */
+        .modal-wrap { position: fixed; inset: 0; z-index: 400; display: none; align-items: flex-end; justify-content: center; background: rgba(15,23,42,.45); backdrop-filter: blur(6px); padding: 0; }
+        .modal-wrap.show { display: flex; }
+        .modal-box { background: #fff; width: 100%; max-height: 95dvh; border-radius: 20px 20px 0 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -8px 40px rgba(0,0,0,.18); animation: slideUp .22s ease; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: .5; } to { transform: translateY(0); opacity: 1; } }
+        @media (min-width: 640px) {
+            .modal-wrap { align-items: center; padding: 16px; }
+            .modal-box { max-width: 580px; border-radius: 18px; max-height: 92dvh; animation: scaleIn .2s ease; }
+            @keyframes scaleIn { from { transform: scale(.96); opacity: .5; } to { transform: scale(1); opacity: 1; } }
+        }
+        .modal-handle { width: 36px; height: 4px; background: #cbd5e1; border-radius: 2px; margin: 10px auto 0; flex-shrink: 0; }
+        @media (min-width: 640px) { .modal-handle { display: none; } }
+        .modal-head { padding: 14px 18px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
+        .modal-head-left { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+        .modal-title { font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .modal-close { width: 28px; height: 28px; border-radius: 7px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; transition: all .15s; }
+        .modal-close:hover { background: #f1f5f9; color: #0f172a; }
+        .modal-body { padding: 18px; overflow-y: auto; flex: 1; }
+        .modal-foot { padding: 14px 18px; border-top: 1px solid #f1f5f9; display: flex; gap: 9px; align-items: center; flex-shrink: 0; }
+        .type-sw { display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
+        .tsw-btn { padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; background: transparent; color: #94a3b8; transition: all .15s; white-space: nowrap; }
+        .tsw-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+        .fg { margin-bottom: 14px; }
+        .fl { display: block; font-size: 9.5px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+        .fi, .fsel, .fta { width: 100%; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 13px; font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; outline: none; transition: border .15s, box-shadow .15s; }
+        .fi:focus, .fsel:focus, .fta:focus { border-color: #0f172a; background: #fff; box-shadow: 0 0 0 3px rgba(15,23,42,.06); }
+        .fi::placeholder { color: #94a3b8; }
+        .fsel { cursor: pointer; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-color: #f8fafc; padding-right: 30px; }
+        .fta { resize: none; height: 80px; }
+        .fsel option { background: #fff; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 400px) { .form-row { grid-template-columns: 1fr; } }
+        .fdiv { height: 1px; background: #f1f5f9; margin: 14px 0; }
+        .status-trigger { width: 100%; padding: 12px 16px; border: 2px dashed #e2e8f0; border-radius: 10px; background: none; font-size: 12.5px; font-weight: 700; color: #64748b; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all .15s; }
+        .status-trigger:hover { border-color: #94a3b8; color: #0f172a; }
+        .status-box { background: #fefce8; border: 1px solid #fef08a; border-radius: 10px; padding: 14px; margin-top: 8px; }
+        .fbtn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; transition: all .15s; white-space: nowrap; }
+        .fbtn-primary { background: #0f172a; color: #fff; }
+        .fbtn-primary:hover { background: #1e293b; }
+        .fbtn-ghost { background: #f1f5f9; color: #475569; }
+        .fbtn-ghost:hover { background: #e2e8f0; }
+        .fbtn-danger { background: #fef2f2; color: #ef4444; }
+        .fbtn-danger:hover { background: #fee2e2; }
+
+        /* Dashboard */
+        #dashboard-modal .modal-box { max-width: 660px; }
+        .dash-total { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 14px; position: relative; overflow: hidden; }
+        .dash-total::after { content:''; position: absolute; top: -60px; right: -60px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(251,191,36,.2) 0%, transparent 70%); }
+        .dash-total-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #94a3b8; margin-bottom: 8px; }
+        .dash-total-val { font-size: 38px; font-weight: 800; color: #fbbf24; line-height: 1; }
+        .dash-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        @media (max-width: 500px) { .dash-grid { grid-template-columns: repeat(2, 1fr); } }
+        .dash-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 10px; text-align: center; }
+        .dash-val { font-size: 24px; font-weight: 800; line-height: 1; margin-bottom: 5px; }
+        .dash-lbl { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: #94a3b8; }
+        #settings-modal .modal-box { max-width: 440px; }
+
+        /* Dialog */
+        #app-dialog { position: fixed; inset: 0; z-index: 600; display: none; align-items: center; justify-content: center; background: rgba(15,23,42,.5); backdrop-filter: blur(8px); padding: 20px; }
+        #app-dialog.show { display: flex; }
+        .dlg-box { background: #fff; border-radius: 18px; width: 100%; max-width: 320px; box-shadow: 0 8px 40px rgba(0,0,0,.2); overflow: hidden; animation: scaleIn .18s ease; text-align: center; }
+        .dlg-icon { padding: 24px 20px 8px; }
+        .dlg-icon-inner { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto; }
+        .dlg-body { padding: 4px 22px 22px; }
+        .dlg-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+        .dlg-msg { font-size: 13px; color: #64748b; line-height: 1.5; }
+        .dlg-btns { border-top: 1px solid #f1f5f9; display: flex; }
+        .dlg-btn { flex: 1; padding: 14px; font-size: 13px; font-weight: 700; cursor: pointer; background: none; border: none; font-family: 'Plus Jakarta Sans', sans-serif; transition: background .12s; }
+        .dlg-btn:hover { background: #f8fafc; }
+        .dlg-btn.cancel  { color: #94a3b8; border-right: 1px solid #f1f5f9; }
+        .dlg-btn.confirm { color: #2563eb; }
+        .dlg-btn.danger  { color: #ef4444; }
+        .dlg-btn.ok      { color: #0f172a; }
+
+        /* Print */
+        #print-area { display: none; }
+        @media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { display: block !important; position: absolute; left:0; top:0; width:100%; background:#fff; color:#000; font-family:serif; padding:40px; } }
+
+        /* Landscape phones */
+        @media (max-height: 500px) and (orientation: landscape) {
+            .hdr-row1 { height: 44px; }
+            .hdr-row2 { padding: 4px 10px; }
+            main { padding: 8px; gap: 8px; }
+            .modal-box { max-height: 98dvh; }
+            .modal-body { padding: 12px 16px; }
+            .modal-foot { padding: 10px 16px; }
+            .modal-head { padding: 10px 16px; }
+            #view-calendar { padding: 8px; min-height: 300px; }
+            #calendar { min-height: 260px; }
+        }
+
+        .hidden { display: none !important; }
     </style>
 </head>
-<body class="text-slate-800 h-screen w-full flex flex-col overflow-hidden relative">
+<body>
 
-    <div id="app-dialog" class="hidden fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 opacity-0 transition-opacity duration-200">
-        <div id="app-dialog-box" class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 flex flex-col text-center">
-            <div id="app-dialog-icon" class="pt-8 pb-2"></div>
-            <div class="px-6 pb-6">
-                <h3 id="app-dialog-title" class="text-lg font-extrabold text-slate-800 mb-2 tracking-tight">Title</h3>
-                <p id="app-dialog-msg" class="text-sm text-slate-500 leading-relaxed">Message</p>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- APP DIALOG -->
+<div id="app-dialog">
+    <div class="dlg-box">
+        <div class="dlg-icon"><div id="dlg-icon" class="dlg-icon-inner"></div></div>
+        <div class="dlg-body"><div class="dlg-title" id="dlg-title">Title</div><div class="dlg-msg" id="dlg-msg">Message</div></div>
+        <div class="dlg-btns" id="dlg-btns"></div>
+    </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+    <button class="sb-close" onclick="closeSidebar()"><i class="fa-solid fa-times"></i></button>
+    <div style="font-size:14px;font-weight:800;color:#0f172a">Settings</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:3px">Cloud sync & data management</div>
+    <div class="sb-title">Cloud Sync</div>
+    <button class="sb-btn blue" id="btn-sync" onclick="syncToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload to Google Sheet</button>
+    <button class="sb-btn green" id="btn-download" onclick="downloadFromCloud()"><i class="fa-solid fa-cloud-arrow-down"></i> Restore from Cloud</button>
+    <div class="sb-title">App Profile</div>
+    <button class="sb-btn" onclick="openSettingsModal()"><i class="fa-solid fa-pen-to-square"></i> Edit Office Profile</button>
+    <div class="sb-title">Local Backup</div>
+    <button class="sb-btn" onclick="downloadBackup()"><i class="fa-solid fa-download"></i> Save Backup to Device</button>
+    <button class="sb-btn" onclick="document.getElementById('restore-file').click()"><i class="fa-solid fa-upload"></i> Load Backup from Device</button>
+    <input type="file" id="restore-file" style="display:none" accept=".json" onchange="restoreBackup(event)">
+    <div style="margin-top:auto;padding-top:20px;border-top:1px solid #f1f5f9;margin-top:24px">
+        <button class="sb-btn danger" onclick="hardReset()"><i class="fa-solid fa-trash-can"></i> Delete All Local Data</button>
+    </div>
+</aside>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+     Mobile  : Row1 = Logo + Upload + New Entry
+               Row2 = Search | Filter | View | Settings | Refresh | Dashboard | Schedule
+     Desktop : Single merged row (Row2 hidden, inline controls shown)
+══════════════════════════════════════════ -->
+<header>
+
+    <!-- ROW 1 — always shown -->
+    <div class="hdr-row1">
+        <a href="." class="logo-group">
+            <svg width="130" height="34" viewBox="0 0 150 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">
+                <path d="M15 8C8.37258 8 3 13.3726 3 20C3 26.6274 8.37258 32 15 32C21.6274 32 27 26.6274 27 20" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/>
+                <path d="M21 14C23.2091 16.2091 23.2091 19.7909 21 22L18 25C15.7909 27.2091 12.2091 27.2091 10 25L6 21" stroke="#FBBF24" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="15" cy="20" r="3" fill="#FBBF24"/>
+                <text x="35" y="27" fill="#0F172A" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="20" letter-spacing="-0.03em">SOLI</text>
+                <text x="80" y="27" fill="#0F172A" font-family="'Plus Jakarta Sans', sans-serif" font-weight="300" font-size="20" letter-spacing="-0.03em">SYSTEM</text>
+            </svg>
+            <div class="office-block">
+                <div class="oname" id="header-office-name">Loading Office...</div>
+                <div class="osub"  id="header-office-subtitle">Loading...</div>
             </div>
-            <div id="app-dialog-btns" class="flex border-t border-slate-100 bg-slate-50"></div>
+        </a>
+
+        <div class="h-spacer"></div>
+
+        <!-- DESKTOP inline controls (shown at ≥900px) -->
+        <div class="hdr-inline">
+            <select class="filter-sel" id="filter-status-d" onchange="syncFilters(this)">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="done">Released</option>
+            </select>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="search-d" oninput="syncSearch(this)" placeholder="Search...">
+            </div>
+            <div class="view-toggle">
+                <button class="vtbtn active" id="vcal-d" onclick="switchView('calendar')"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
+                <button class="vtbtn" id="vtbl-d" onclick="switchView('table')"><i class="fa-solid fa-list"></i> List</button>
+            </div>
+            <button class="hbtn hbtn-icon" onclick="toggleSidebar()" title="Settings"><i class="fa-solid fa-sliders"></i></button>
+            <button class="hbtn hbtn-icon" onclick="location.reload()" title="Refresh"><i class="fa-solid fa-rotate-right"></i></button>
+            <button class="hbtn hbtn-icon" onclick="showDashboard()" title="Dashboard"><i class="fa-solid fa-chart-pie"></i></button>
+            <button class="hbtn hbtn-icon" onclick="toggleRightPanel()" title="Schedule"><i class="fa-solid fa-calendar-check"></i></button>
+            <button class="hbtn hbtn-upload" id="btn-upload-d" onclick="syncToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload</button>
+            <button class="hbtn hbtn-new" onclick="openModal()"><i class="fa-solid fa-plus"></i> New Entry</button>
+        </div>
+
+        <!-- MOBILE primary buttons (hidden at ≥900px) -->
+        <div class="hdr-mobile-cta" style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <button class="hbtn hbtn-upload" id="btn-upload-m" onclick="syncToCloud()" title="Upload to Cloud">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </button>
+            <button class="hbtn hbtn-new" onclick="openModal()" title="New Entry">
+                <i class="fa-solid fa-plus"></i> <span style="font-size:11.5px">New</span>
+            </button>
         </div>
     </div>
 
-    <div id="settings-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-200">
-        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 class="font-extrabold text-slate-800 text-lg tracking-tight flex items-center gap-2"><i class="fa-solid fa-building text-slate-400"></i> Office Profile</h3>
-                <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times"></i></button>
+    <!-- ROW 2 — mobile / tablet only (hidden at ≥900px) -->
+    <div class="hdr-row2">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="search-m" oninput="syncSearch(this)" placeholder="Search...">
+        </div>
+
+        <select class="filter-sel" id="filter-status-m" onchange="syncFilters(this)">
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="done">Released</option>
+        </select>
+
+        <div class="view-toggle">
+            <button class="vtbtn active" id="vcal-m" onclick="switchView('calendar')"><i class="fa-solid fa-calendar-days"></i></button>
+            <button class="vtbtn" id="vtbl-m" onclick="switchView('table')"><i class="fa-solid fa-list"></i></button>
+        </div>
+
+        <button class="hbtn hbtn-sm" onclick="toggleSidebar()" title="Settings"><i class="fa-solid fa-sliders"></i></button>
+        <button class="hbtn hbtn-sm" onclick="location.reload()" title="Refresh"><i class="fa-solid fa-rotate-right"></i></button>
+        <button class="hbtn hbtn-sm" onclick="showDashboard()" title="Dashboard"><i class="fa-solid fa-chart-pie"></i></button>
+        <button class="hbtn hbtn-sm" onclick="toggleRightPanel()" title="Schedule"><i class="fa-solid fa-calendar-check"></i></button>
+    </div>
+</header>
+
+<!-- APP BODY -->
+<div class="app-body">
+    <main id="main-content">
+        <div id="view-calendar"><div id="calendar"></div></div>
+        <div id="view-table">
+            <div class="tbl-tabs">
+                <div class="tab-nav">
+                    <button class="tab-btn active" id="tab-sol" onclick="switchTableTab('solicitation')"><i class="fa-solid fa-hand-holding-heart"></i> Solicitations <span class="tab-count" id="cnt-sol">0</span></button>
+                    <button class="tab-btn" id="tab-evt" onclick="switchTableTab('event')"><i class="fa-solid fa-calendar-star"></i> Events <span class="tab-count" id="cnt-evt">0</span></button>
+                    <button class="tab-btn" id="tab-hrg" onclick="switchTableTab('hearing')"><i class="fa-solid fa-gavel"></i> Hearings <span class="tab-count" id="cnt-hrg">0</span></button>
+                </div>
+                <button class="fbtn fbtn-ghost" style="font-size:11px;padding:6px 10px;margin-bottom:10px;flex-shrink:0;margin-left:6px" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> CSV</button>
             </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Office Name</label>
-                    <input type="text" id="set-office-name" placeholder="e.g. Office of Hon. Leopoldo Gironella, Jr." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 font-bold text-slate-800">
+            <div class="tbl-scroll">
+                <div id="table-solicitation">
+                    <table class="data-tbl">
+                        <thead><tr><th>ID</th><th>Date</th><th>Name / Organization</th><th>Description</th><th>Address</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead>
+                        <tbody id="tbody-sol"></tbody>
+                    </table>
                 </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Subtitle / Position</label>
-                    <input type="text" id="set-office-subtitle" placeholder="e.g. Sangguniang Panlalawigan Member" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 text-slate-600">
+                <div id="table-event" style="display:none">
+                    <table class="data-tbl">
+                        <thead><tr><th>ID</th><th>Date & Time</th><th>Event</th><th>Venue</th><th>Notes</th></tr></thead>
+                        <tbody id="tbody-evt"></tbody>
+                    </table>
                 </div>
-                <hr class="border-slate-100">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Signature Name (For Printed Vouchers)</label>
-                    <input type="text" id="set-sig-name" placeholder="e.g. HON. LEOPOLDO GIRONELLA, JR." class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 font-bold uppercase text-slate-800">
+                <div id="table-hearing" style="display:none">
+                    <table class="data-tbl">
+                        <thead><tr><th>ID</th><th>Date & Time</th><th>Hearing</th><th>Venue</th><th>Notes</th></tr></thead>
+                        <tbody id="tbody-hrg"></tbody>
+                    </table>
                 </div>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
-                <button onclick="saveSettings()" class="bg-slate-900 text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition shadow-sm">Save Profile</button>
             </div>
         </div>
-    </div>
+    </main>
 
-    <div id="dashboard-modal" class="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity duration-300">
-        <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden transform transition-transform scale-100">
-            <div class="bg-slate-900 px-6 py-4 flex justify-between items-center">
-                <h2 class="text-white font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-chart-pie text-amber-400"></i> Morning Briefing</h2>
-                <button onclick="closeDashboard()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="p-6 md:p-8 space-y-6 bg-slate-50">
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-amber-400 rounded-full blur-3xl opacity-10 -mr-10 -mt-10"></div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Total Cash Released (All Time)</p>
-                    <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900" id="dash-total-amount">₱0</h1>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">PENDING</p><p class="text-2xl font-bold text-amber-500" id="dash-pending">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">RELEASED</p><p class="text-2xl font-bold text-green-600" id="dash-done">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">DECLINED</p><p class="text-2xl font-bold text-red-500" id="dash-declined">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">TOTAL EVENTS</p><p class="text-2xl font-bold text-blue-600" id="dash-events">0</p></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 text-center"><p class="text-xs text-slate-400 font-bold mb-1">TOTAL HEARINGS</p><p class="text-2xl font-bold text-emerald-600" id="dash-hearings">0</p></div>
-                </div>
-                <button onclick="closeDashboard()" class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-md">Enter Workspace</button>
-            </div>
+    <aside id="right-panel">
+        <div class="rp-handle"></div>
+        <div class="rp-header">
+            <span class="rp-title"><i class="fa-regular fa-clock"></i> Upcoming Schedule</span>
+            <button class="hbtn hbtn-sm" onclick="toggleRightPanel()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-    </div>
+        <div id="upcoming-list"></div>
+    </aside>
+</div>
 
-    <header class="bg-white border-b border-slate-200 shrink-0 z-20 relative">
-        <div class="px-4 md:px-6 py-3 flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
-            
-            <a href="." class="flex items-center gap-4 shrink-0">
-                <svg width="150" height="40" viewBox="0 0 150 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0">
-                  <path d="M15 8C8.37258 8 3 13.3726 3 20C3 26.6274 8.37258 32 15 32V32C21.6274 32 27 26.6274 27 20" stroke="#0F172A" stroke-width="3" stroke-linecap="round"/>
-                  <path d="M21 14C23.2091 16.2091 23.2091 19.7909 21 22L18 25C15.7909 27.2091 12.2091 27.2091 10 25L6 21" stroke="#FBBF24" stroke-width="3" stroke-linecap="round"/>
-                  <circle cx="15" cy="20" r="3" fill="#FBBF24"/>
-                  <text x="35" y="27" fill="#0F172A" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="20" letter-spacing="-0.03em">SOLI</text>
-                  <text x="80" y="27" fill="#0F172A" font-family="'Plus Jakarta Sans', sans-serif" font-weight="300" font-size="20" letter-spacing="-0.03em">SYSTEM</text>
-                </svg>
-                
-                <div class="hidden md:flex flex-col border-l-2 border-slate-200 pl-4 py-1 shrink-0">
-                    <h1 id="header-office-name" class="text-sm font-extrabold text-slate-800 leading-tight">Loading Office...</h1>
-                    <p id="header-office-subtitle" class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Loading...</p>
+<!-- ENTRY MODAL -->
+<div id="entry-modal" class="modal-wrap">
+    <div class="modal-box">
+        <div class="modal-handle"></div>
+        <div class="modal-head">
+            <div class="modal-head-left">
+                <span class="modal-title" id="modal-title-text">New Record</span>
+                <div class="type-sw">
+                    <button class="tsw-btn active" id="btn-solicitation" onclick="switchMode('solicitation')">Solicitation</button>
+                    <button class="tsw-btn" id="btn-event" onclick="switchMode('event')">Event</button>
+                    <button class="tsw-btn" id="btn-hearing" onclick="switchMode('hearing')">Hearing</button>
                 </div>
-            </a>
-            
-            <div class="flex items-center gap-2 shrink-0">
-                <select id="table-filter-status" onchange="filterData()" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-600 outline-none shrink-0">
-                    <option value="all">All Status</option>
-                    <option value="pending">Pending Only</option>
-                    <option value="done">Released Only</option>
-                </select>
-
-                <div class="relative w-40 md:w-48 shrink-0">
-                    <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-sm"></i>
-                    <input type="text" id="search-input" onkeyup="filterData()" placeholder="Search..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 focus:bg-white focus:border-slate-400 rounded-lg text-sm outline-none transition">
-                </div>
-                <div class="flex bg-slate-100 p-1 rounded-lg shrink-0 border border-slate-200">
-                    <button onclick="switchView('calendar')" id="view-calendar-btn" class="btn-toggle-view btn-active"><i class="fa-solid fa-calendar-day md:hidden"></i><span class="hidden md:inline">Calendar</span></button>
-                    <button onclick="switchView('table')" id="view-table-btn" class="btn-toggle-view btn-inactive"><i class="fa-solid fa-table-list md:hidden"></i><span class="hidden md:inline">List</span></button>
-                </div>
-                
-                <button onclick="toggleSidebar()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-bold hover:bg-slate-200 transition shrink-0" title="System Settings & Backups"><i class="fa-solid fa-gear"></i></button>
-                <button onclick="location.reload()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-bold hover:bg-slate-200 transition shrink-0" title="Refresh System"><i class="fa-solid fa-arrows-rotate"></i></button>
-                <button onclick="showDashboard()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-bold hover:bg-slate-200 transition shrink-0" title="Dashboard Briefing"><i class="fa-solid fa-chart-pie"></i></button>
-                <button onclick="toggleRightPanel()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-lg font-bold hover:bg-slate-200 transition shrink-0" title="Toggle Schedule Panel"><i class="fa-solid fa-right-to-bracket"></i></button>
-                
-                <button id="btn-sync-header" onclick="syncToCloud()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 transition shadow-sm shrink-0 flex items-center gap-2" title="Sync to Google Sheet">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> <span class="hidden md:inline">Upload</span>
-                </button>
-
-                <button onclick="openModal()" class="bg-slate-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-slate-800 transition shadow-sm shrink-0 flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> <span class="hidden md:inline">New Entry</span>
-                </button>
             </div>
+            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-times"></i></button>
         </div>
-    </header>
-
-    <div class="flex-1 flex overflow-hidden relative">
-        <aside id="sidebar" class="fixed inset-y-0 left-0 transform -translate-x-full transition duration-200 z-40 w-64 bg-white border-r border-slate-200 flex flex-col shadow-2xl p-4">
-            <button onclick="toggleSidebar()" class="absolute top-4 right-4 text-slate-400"><i class="fa-solid fa-times text-xl"></i></button>
-            <h3 class="text-xs font-bold text-slate-400 uppercase mb-4">Cloud Sync & Data</h3>
-            
-            <div class="space-y-3">
-                <button id="btn-sync" onclick="syncToCloud()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition hover:bg-blue-700"><i class="fa-solid fa-cloud-arrow-up"></i> Upload to Google Sheet</button>
-                <button id="btn-download" onclick="downloadFromCloud()" class="w-full bg-emerald-600 text-white font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm transition hover:bg-emerald-700"><i class="fa-solid fa-cloud-arrow-down"></i> Restore from Cloud</button>
-                
-                <hr class="border-slate-100 mt-4 mb-2">
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">App Configuration</p>
-                <button onclick="openSettingsModal()" class="w-full bg-white border border-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50"><i class="fa-solid fa-pen-to-square"></i> Edit Office Profile</button>
-
-                <hr class="border-slate-100 mt-4 mb-2">
-                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-2">Device Local Backup</p>
-                <button onclick="downloadBackup()" class="w-full bg-white border border-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50"><i class="fa-solid fa-download"></i> Save File to Tablet</button>
-                <button onclick="document.getElementById('restore-file').click()" class="w-full bg-white border border-slate-200 text-slate-700 font-bold py-2 rounded-lg text-xs flex items-center justify-center gap-2 hover:bg-slate-50"><i class="fa-solid fa-upload"></i> Load File from Tablet</button>
-                <input type="file" id="restore-file" class="hidden" accept=".json" onchange="restoreBackup(event)">
-                
-                <hr class="border-slate-100 mt-6">
-                <button onclick="hardReset()" class="w-full text-[10px] text-red-500 font-bold py-2 tracking-wide uppercase hover:bg-red-50 rounded">Delete Local App Data</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 p-4 md:p-6 overflow-y-auto h-full flex flex-col bg-slate-50 transition-all duration-300">
-            <div id="view-calendar" class="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 p-4 md:p-6 min-h-[500px]">
-                <div id="calendar" class="h-full"></div>
-            </div>
-
-            <div id="view-table" class="hidden flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[500px]">
-                <div class="flex justify-between border-b border-slate-100 bg-white shrink-0 px-2 pt-2 pr-4 overflow-x-auto no-scrollbar">
-                    <div class="flex shrink-0">
-                        <button onclick="switchTableTab('solicitation')" id="tab-sol" class="px-4 py-3 text-sm font-bold border-b-2 border-slate-900 text-slate-900 transition">Solicitations</button>
-                        <button onclick="switchTableTab('event')" id="tab-evt" class="px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Events</button>
-                        <button onclick="switchTableTab('hearing')" id="tab-hrg" class="px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Hearings</button>
-                    </div>
-                    <button onclick="exportCSV()" class="self-center text-xs bg-green-50 text-green-700 font-bold px-3 py-1.5 rounded flex items-center gap-1 hover:bg-green-100 transition shrink-0 ml-4"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
-                </div>
-                
-                <div class="flex-1 overflow-auto p-4 md:p-6">
-                    <div id="table-solicitation">
-                        <table class="w-full text-sm text-left border-collapse responsive-table">
-                            <thead class="text-xs text-slate-400 uppercase border-b border-slate-100">
-                                <tr>
-                                    <th class="px-4 py-3 font-semibold">ID No.</th>
-                                    <th class="px-4 py-3 font-semibold">Date</th>
-                                    <th class="px-4 py-3 font-semibold">Client</th>
-                                    <th class="px-4 py-3 font-semibold">Address</th>
-                                    <th class="px-4 py-3 font-semibold">Status</th>
-                                    <th class="px-4 py-3 font-semibold text-right">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-sol" class="divide-y divide-slate-50"></tbody>
-                        </table>
-                    </div>
-                    <div id="table-event" class="hidden">
-                        <table class="w-full text-sm text-left border-collapse responsive-table">
-                            <thead class="text-xs text-slate-400 uppercase border-b border-slate-100"><tr><th class="px-4 py-3 font-semibold w-32">ID</th><th class="px-4 py-3 font-semibold w-32">Date & Time</th><th class="px-4 py-3 font-semibold">Event Name</th><th class="px-4 py-3 font-semibold">Venue</th><th class="px-4 py-3 font-semibold">Notes</th></tr></thead>
-                            <tbody id="tbody-evt" class="divide-y divide-slate-50"></tbody>
-                        </table>
-                    </div>
-                    <div id="table-hearing" class="hidden">
-                        <table class="w-full text-sm text-left border-collapse responsive-table">
-                            <thead class="text-xs text-slate-400 uppercase border-b border-slate-100"><tr><th class="px-4 py-3 font-semibold w-32">ID</th><th class="px-4 py-3 font-semibold w-32">Date & Time</th><th class="px-4 py-3 font-semibold">Hearing Title</th><th class="px-4 py-3 font-semibold">Venue</th><th class="px-4 py-3 font-semibold">Notes</th></tr></thead>
-                            <tbody id="tbody-hrg" class="divide-y divide-slate-50"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
-
-        <aside id="right-panel" class="w-full md:w-72 lg:w-80 bg-white border-t md:border-t-0 md:border-l border-slate-200 flex flex-col shrink-0 transition-all duration-300">
-            <div class="px-5 py-4 border-b border-slate-100 shrink-0 bg-white flex justify-between items-center">
-                <h2 class="font-extrabold text-sm uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                    <i class="fa-regular fa-clock text-slate-400 text-lg"></i> Schedule
-                </h2>
-                <button onclick="toggleRightPanel()" class="text-slate-400 hover:text-slate-800"><i class="fa-solid fa-compress"></i></button>
-            </div>
-            <div id="upcoming-list" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/50"></div>
-        </aside>
-    </div>
-
-    <div id="entry-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-2xl max-h-[95vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
-            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
-                <div class="flex items-center gap-4 overflow-hidden">
-                    <h3 class="font-extrabold text-slate-800 text-lg tracking-tight hidden md:block" id="modal-title-text">New Record</h3>
-                    <div class="flex bg-slate-200 p-1 rounded-lg shrink-0 overflow-x-auto no-scrollbar">
-                        <button type="button" onclick="switchMode('solicitation')" id="btn-solicitation" class="px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition">Solicitation</button>
-                        <button type="button" onclick="switchMode('event')" id="btn-event" class="px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition">Event</button>
-                        <button type="button" onclick="switchMode('hearing')" id="btn-hearing" class="px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition">Hearing</button>
-                    </div>
-                </div>
-                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition shrink-0 ml-2"><i class="fa-solid fa-times"></i></button>
-            </div>
-
-            <form id="main-form" onsubmit="event.preventDefault(); saveForm();" class="p-6 overflow-y-auto flex-1 space-y-5">
-                <input type="hidden" id="entry-id">
-                <input type="hidden" id="entry-type" value="solicitation">
-                
-                <div>
-                    <label id="label-title" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Name of Solicitor</label>
-                    <input type="text" id="title" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 focus:ring-1 transition bg-slate-50 focus:bg-white">
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Date</label>
-                        <input type="date" id="date" required class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition bg-slate-50 focus:bg-white">
-                    </div>
-                    <div id="field-time">
-                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Time</label>
-                        <input type="time" id="time" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition bg-slate-50 focus:bg-white">
-                    </div>
-                </div>
-
-                <div id="group-contact">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Contact Number</label>
-                    <input type="tel" id="contact" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition bg-slate-50 focus:bg-white">
-                </div>
-
-                <div id="group-desc-sol">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Purpose</label>
-                    <input type="text" id="description" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition bg-slate-50 focus:bg-white">
-                </div>
-
-                <div id="group-address" class="border-b border-slate-100 pb-5">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Address</label>
-                    <input type="text" id="address" placeholder="e.g. Vigan City or Brgy 1, Vigan City" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition bg-slate-50 focus:bg-white">
-                </div>
-
-                <div id="field-venue" class="hidden border-b border-slate-100 pb-5">
-                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Venue</label>
-                    <input type="text" id="venue" class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition bg-slate-50 focus:bg-white">
-                </div>
-
-                <div id="group-desc-evt" class="hidden">
-                    <label id="label-evt-desc" class="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">Event Note</label>
-                    <textarea id="evt-description" class="w-full h-24 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-slate-800 transition resize-none bg-slate-50 focus:bg-white"></textarea>
-                </div>
-
-                <div id="processing-wrapper" class="hidden">
-                    <button type="button" id="btn-show-processing" onclick="revealProcessing()" class="w-full py-3 border-2 border-dashed border-slate-300 text-slate-500 rounded-xl font-bold text-sm hover:border-slate-800 hover:text-slate-800 transition">
-                        <i class="fa-solid fa-lock-open mr-2"></i> Update Status / Release Funds
-                    </button>
-                    
-                    <div id="processing-fields" class="hidden p-5 bg-amber-50/50 border border-amber-100 rounded-2xl space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Status</label>
-                                <select id="status" onchange="toggleAuditFields()" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm font-bold bg-white outline-none focus:border-amber-500">
-                                    <option value="pending">🟡 Pending</option>
-                                    <option value="done">🟢 Done / Released</option>
-                                    <option value="declined">🔴 Declined</option>
-                                </select>
+        <form id="main-form" onsubmit="event.preventDefault();saveForm()" class="modal-body">
+            <input type="hidden" id="entry-id">
+            <input type="hidden" id="entry-type" value="solicitation">
+            <!-- SOLICITATION -->
+            <div id="group-sol-fields">
+                <div class="fg"><label class="fl">Name, Barangay &amp; Municipality/Organization</label><input type="text" id="title" class="fi" placeholder="e.g. Juan dela Cruz - Brgy 1, Vigan City"></div>
+                <div class="fg"><label class="fl">Date</label><input type="date" id="date" class="fi"></div>
+                <div class="fg"><label class="fl">Purpose / Description</label><input type="text" id="description" class="fi" placeholder="Reason for solicitation..."></div>
+                <div class="fg"><label class="fl">Address</label><input type="text" id="address" class="fi" placeholder="e.g. Brgy 1, Vigan City"></div>
+                <div class="fg" style="padding-bottom:14px;border-bottom:1px solid #f1f5f9;margin-bottom:14px"><label class="fl">Contact Number</label><input type="tel" id="contact" class="fi" placeholder="09XXXXXXXXX"></div>
+                <div id="processing-wrapper">
+                    <button type="button" id="btn-show-processing" class="status-trigger" onclick="revealProcessing()"><i class="fa-solid fa-lock-open"></i> Update Status / Release Funds</button>
+                    <div id="processing-fields" style="display:none">
+                        <div class="status-box">
+                            <div class="form-row" style="margin-bottom:12px">
+                                <div class="fg" style="margin-bottom:0"><label class="fl">Status</label><select id="status" class="fsel" onchange="toggleAuditFields()"><option value="pending">🟡 Pending</option><option value="done">🟢 Released</option><option value="declined">🔴 Declined</option></select></div>
+                                <div class="fg" style="margin-bottom:0"><label class="fl">Amount Released (₱)</label><input type="number" id="amount" class="fi" placeholder="0.00" style="font-size:15px;font-weight:800"></div>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Amount Released (₱)</label>
-                                <input type="number" id="amount" placeholder="0.00" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-lg font-bold outline-none focus:border-amber-500 bg-white">
+                            <div id="audit-section" style="display:none;padding-top:12px;border-top:1px solid #fef08a">
+                                <div class="form-row" style="margin-bottom:10px">
+                                    <div class="fg" style="margin-bottom:0"><label class="fl">Date Received</label><input type="date" id="date-given" class="fi"></div>
+                                    <div class="fg" style="margin-bottom:0"><label class="fl">Claimed By</label><input type="text" id="person-claimed" class="fi"></div>
+                                </div>
+                                <div class="fg" style="margin-bottom:0"><label class="fl">Released By (Staff)</label><input type="text" id="released-by" class="fi" placeholder="Staff name..."></div>
                             </div>
                         </div>
-                        <div id="audit-section" class="hidden pt-4 border-t border-amber-200/50 space-y-3">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Date Released</label><input type="date" id="date-given" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none bg-white"></div>
-                                <div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Claimed By</label><input type="text" id="person-claimed" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none bg-white"></div>
-                            </div>
-                            <div><label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Released By (Staff)</label><input type="text" id="released-by" placeholder="Staff Name" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none bg-white"></div>
-                        </div>
                     </div>
                 </div>
-                
-                <div class="pt-4 border-t border-slate-100 flex gap-3 shrink-0">
-                    <button type="button" onclick="printVoucher()" id="btn-print" class="hidden px-5 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-100 transition shadow-sm"><i class="fa-solid fa-print"></i> Print</button>
-                    <div class="flex-1"></div>
-                    <button type="button" onclick="deleteEntry()" id="btn-delete" class="hidden px-5 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-sm hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i></button>
-                    <button type="submit" class="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition shadow-md text-sm">Save Locally</button>
+            </div>
+            <!-- EVENT / HEARING -->
+            <div id="group-evt-fields" style="display:none">
+                <div class="fg"><label class="fl" id="label-evt-title">Event Name</label><input type="text" id="evt-title" class="fi" placeholder="Name of event..."></div>
+                <div class="form-row">
+                    <div class="fg"><label class="fl">Date</label><input type="date" id="evt-date" class="fi"></div>
+                    <div class="fg"><label class="fl">Time</label><input type="time" id="time" class="fi"></div>
                 </div>
-            </form>
+                <div class="fg" style="padding-bottom:14px;border-bottom:1px solid #f1f5f9;margin-bottom:14px"><label class="fl">Venue</label><input type="text" id="venue" class="fi" placeholder="Location..."></div>
+                <div class="fg"><label class="fl" id="label-evt-desc">Notes / Description</label><textarea id="evt-description" class="fta" placeholder="Additional notes..."></textarea></div>
+            </div>
+        </form>
+        <div class="modal-foot">
+            <button type="button" id="btn-print" style="display:none" class="fbtn fbtn-ghost" onclick="printVoucher()"><i class="fa-solid fa-print"></i> Print</button>
+            <div style="flex:1"></div>
+            <button type="button" id="btn-delete" style="display:none" class="fbtn fbtn-danger" onclick="deleteEntry()"><i class="fa-solid fa-trash"></i></button>
+            <button type="submit" form="main-form" class="fbtn fbtn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Locally</button>
         </div>
     </div>
+</div>
 
-    <div id="print-area" class="hidden bg-white p-8 max-w-4xl mx-auto font-serif text-black">
-        <div class="flex justify-between items-start mb-6 border-b-2 border-gray-800 pb-4">
-             <div class="w-24 h-24 border border-gray-300 flex items-center justify-center rounded-full bg-gray-100 text-xs text-center text-gray-500">Ilocos Sur Seal</div>
-             <div class="text-center flex-1 pt-2">
-                 <p class="text-xs uppercase tracking-widest text-gray-700">Republic of the Philippines</p>
-                 <h1 class="text-xl font-bold text-gray-900">PROVINCE OF ILOCOS SUR</h1>
-                 <h2 id="print-office-name" class="text-lg font-bold">Office of Hon. Leopoldo Gironella, Jr.</h2>
-                 <p id="print-office-subtitle" class="text-sm italic text-gray-600">Sangguniang Panlalawigan Member</p>
-             </div>
-             <div class="w-24 h-24 border border-gray-300 flex items-center justify-center rounded-full bg-gray-100 text-xs text-center text-gray-500">SP / BM Logo</div>
-        </div>
-        <h2 class="text-2xl font-bold uppercase text-center mb-8 border-2 border-gray-800 inline-block px-8 py-2 mx-auto block w-max">Solicitation Voucher</h2>
-        <div class="space-y-4 text-base">
-            <div class="flex justify-between"><div><span class="font-bold">Date:</span> <span id="p-date" class="underline"></span></div><div><span class="font-bold">Control No:</span> <span id="p-control" class="font-mono font-bold text-lg"></span></div></div>
-            <div class="grid grid-cols-1 gap-4 border border-gray-300 p-4">
-                <div class="flex"><span class="font-bold w-32">Pay To:</span> <span id="p-name" class="font-bold uppercase text-lg border-b border-gray-400 flex-1"></span></div>
-                <div class="flex"><span class="font-bold w-32">Address:</span> <span id="p-address" class="border-b border-gray-400 flex-1"></span></div>
-                <div class="flex"><span class="font-bold w-32">Amount:</span> <span class="font-bold text-xl">₱ <span id="p-amount"></span></span></div>
-                <div class="mt-2"><p class="font-bold mb-1">Purpose/Description:</p><p id="p-desc" class="border border-gray-300 p-2 min-h-[3rem] italic bg-gray-50"></p></div>
-            </div>
-            <div class="mt-8 border-2 border-gray-800 p-4 bg-gray-50">
-                <p class="text-center font-bold uppercase mb-4 text-sm">Acknowledgement of Receipt</p>
-                <div class="flex justify-between gap-4 px-2">
-                    <div class="text-center w-1/3"><div id="p-claimed-by" class="border-b-2 border-gray-800 h-8 font-bold text-sm flex items-end justify-center pb-1"></div><p class="text-[10px] mt-1 uppercase">Claimant Signature</p></div>
-                    <div class="text-center w-1/3"><div id="p-date-given" class="border-b-2 border-gray-800 h-8 font-bold text-sm flex items-end justify-center pb-1"></div><p class="text-[10px] mt-1 uppercase">Date Received</p></div>
-                    <div class="text-center w-1/3"><div id="p-released-by" class="border-b-2 border-gray-800 h-8 font-bold text-sm flex items-end justify-center pb-1"></div><p class="text-[10px] mt-1 uppercase">Released By (Staff)</p></div>
-                </div>
+<!-- DASHBOARD MODAL -->
+<div id="dashboard-modal" class="modal-wrap">
+    <div class="modal-box" style="max-width:660px">
+        <div class="modal-handle"></div>
+        <div class="modal-head"><span class="modal-title"><i class="fa-solid fa-chart-pie" style="color:#f59e0b;margin-right:7px"></i>Morning Briefing</span><button class="modal-close" onclick="closeDashboard()"><i class="fa-solid fa-times"></i></button></div>
+        <div class="modal-body">
+            <div class="dash-total"><div class="dash-total-label">Total Cash Released — All Time</div><div class="dash-total-val" id="dash-total-amount">₱0</div></div>
+            <div class="dash-grid">
+                <div class="dash-card"><div class="dash-val" id="dash-pending" style="color:#b45309">0</div><div class="dash-lbl">Pending</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-done" style="color:#15803d">0</div><div class="dash-lbl">Released</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-declined" style="color:#b91c1c">0</div><div class="dash-lbl">Declined</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-events" style="color:#1d4ed8">0</div><div class="dash-lbl">Events</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-hearings" style="color:#15803d">0</div><div class="dash-lbl">Hearings</div></div>
             </div>
         </div>
-        <div class="mt-16 text-center w-1/2 mx-auto"><div class="border-b-2 border-gray-800 h-8"></div><p id="print-sig-name" class="font-bold mt-2 uppercase">HON. LEOPOLDO GIRONELLA, JR.</p><p id="print-sig-title" class="text-xs">Sangguniang Panlalawigan Member</p></div>
+        <div class="modal-foot" style="justify-content:flex-end"><button class="fbtn fbtn-primary" onclick="closeDashboard()" style="padding:10px 28px">Enter Workspace</button></div>
     </div>
+</div>
 
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzRzIovorVH9oofjA-iilzhywOv6JQ7138yH_XmiyIc_SY9nqlKXG05petJLsOkRtM_/exec"; 
-        const STORE_KEY = "SOLISYSTEM_DB_MAIN"; 
-        let GLOBAL_DATA = [];
-        let calendar;
+<!-- SETTINGS MODAL -->
+<div id="settings-modal" class="modal-wrap">
+    <div class="modal-box" style="max-width:460px">
+        <div class="modal-handle"></div>
+        <div class="modal-head">
+            <span class="modal-title"><i class="fa-solid fa-building" style="margin-right:7px;color:#94a3b8"></i>Office Profile &amp; Notifications</span>
+            <button class="modal-close" onclick="closeSettingsModal()"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="modal-body">
 
-        let APP_SETTINGS = {
-            officeName: "Office of Hon. Leopoldo Gironella, Jr.",
-            officeSubtitle: "Sangguniang Panlalawigan Member",
-            sigName: "HON. LEOPOLDO GIRONELLA, JR."
+            <!-- Office Profile -->
+            <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:10px">Office Profile</p>
+            <div class="fg"><label class="fl">Office Name</label><input type="text" id="set-office-name" class="fi" placeholder="e.g. Office of Hon. Leopoldo Gironella, Jr." style="font-weight:800"></div>
+            <div class="fg"><label class="fl">Subtitle / Position</label><input type="text" id="set-office-subtitle" class="fi" placeholder="e.g. Sangguniang Panlalawigan Member"></div>
+            <div class="fdiv"></div>
+            <div class="fg"><label class="fl">Signature Name (For Printed Vouchers)</label><input type="text" id="set-sig-name" class="fi" placeholder="e.g. HON. LEOPOLDO GIRONELLA, JR." style="text-transform:uppercase;font-weight:800"></div>
+
+            <div class="fdiv"></div>
+
+            <!-- Notification Settings -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8">Push Notifications</p>
+                <button type="button" onclick="testNotifications()" class="fbtn fbtn-ghost" style="font-size:11px;padding:5px 10px;border:1px solid #e2e8f0">
+                    <i class="fa-solid fa-bell"></i> Test Now
+                </button>
+            </div>
+
+            <!-- Push notification status -->
+            <div id="notif-status-box" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <div>
+                    <p id="notif-status-text" style="font-size:12px;font-weight:700;color:#0f172a">Checking status...</p>
+                    <p style="font-size:10.5px;color:#94a3b8;margin-top:2px">Daily reminders at 8:00 AM for events &amp; hearings</p>
+                </div>
+                <button type="button" onclick="requestNotifPermission()" id="btn-enable-notif" class="fbtn fbtn-primary" style="font-size:11.5px;padding:8px 14px;flex-shrink:0">
+                    <i class="fa-solid fa-bell"></i> Enable
+                </button>
+            </div>
+
+            <div class="fdiv"></div>
+
+            <!-- Email via Google Apps Script -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                <p style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8">Email Notifications</p>
+                <span style="font-size:9px;background:#dcfce7;color:#15803d;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase">Via Google Apps Script</span>
+            </div>
+
+            <div class="fg" style="margin-bottom:0">
+                <label class="fl">Notification Email Address</label>
+                <input type="email" id="set-notif-email" class="fi" placeholder="e.g. office@gmail.com">
+                <p style="font-size:10.5px;color:#64748b;margin-top:6px;line-height:1.5">
+                    <i class="fa-solid fa-circle-info" style="color:#3b82f6;margin-right:4px"></i>
+                    Email is sent by your existing Google Apps Script at 8:00 AM daily — no extra setup needed. Just add your email above and set the trigger in Apps Script.
+                </p>
+            </div>
+        </div>
+        <div class="modal-foot" style="justify-content:flex-end;gap:8px">
+            <button class="fbtn fbtn-ghost" onclick="closeSettingsModal()">Cancel</button>
+            <button class="fbtn fbtn-primary" onclick="saveSettings()"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+        </div>
+    </div>
+</div>
+
+<!-- PRINT AREA -->
+<div id="print-area">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:14px">
+        <div style="width:72px;height:72px;border:1px solid #ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#777;text-align:center">Ilocos Sur Seal</div>
+        <div style="text-align:center;flex:1">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#555">Republic of the Philippines</div>
+            <div style="font-size:17px;font-weight:bold;color:#111">PROVINCE OF ILOCOS SUR</div>
+            <div id="print-office-name" style="font-size:14px;font-weight:bold"></div>
+            <div id="print-office-subtitle" style="font-size:12px;font-style:italic;color:#555"></div>
+        </div>
+        <div style="width:72px;height:72px;border:1px solid #ccc;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#777;text-align:center">Office Logo</div>
+    </div>
+    <h2 style="text-align:center;font-size:18px;font-weight:bold;text-transform:uppercase;border:2px solid #111;display:block;width:max-content;padding:8px 28px;margin:0 auto 24px">Solicitation Voucher</h2>
+    <div style="display:flex;justify-content:space-between;margin-bottom:16px"><div><b>Date:</b> <span id="p-date" style="text-decoration:underline"></span></div><div><b>Control No:</b> <span id="p-control" style="font-family:monospace;font-size:15px;font-weight:bold"></span></div></div>
+    <div style="border:1px solid #aaa;padding:16px;margin-bottom:16px">
+        <div style="display:flex;margin-bottom:10px"><b style="width:100px">Pay To:</b><span id="p-name" style="font-weight:bold;font-size:15px;text-transform:uppercase;border-bottom:1px solid #aaa;flex:1"></span></div>
+        <div style="display:flex;margin-bottom:10px"><b style="width:100px">Address:</b><span id="p-address" style="border-bottom:1px solid #aaa;flex:1"></span></div>
+        <div style="display:flex;margin-bottom:10px"><b style="width:100px">Amount:</b><span style="font-weight:bold;font-size:17px">₱ <span id="p-amount"></span></span></div>
+        <div><b>Purpose:</b><p id="p-desc" style="border:1px solid #ccc;padding:10px;margin-top:6px;min-height:44px;background:#f9f9f9;font-style:italic"></p></div>
+    </div>
+    <div style="border:2px solid #111;padding:16px;background:#f9f9f9">
+        <p style="text-align:center;font-weight:bold;text-transform:uppercase;font-size:11px;margin-bottom:16px">Acknowledgement of Receipt</p>
+        <div style="display:flex;gap:20px">
+            <div style="text-align:center;flex:1"><div id="p-claimed-by" style="border-bottom:2px solid #111;height:32px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;font-weight:bold;font-size:12px"></div><p style="font-size:9px;margin-top:3px;text-transform:uppercase">Claimant Signature</p></div>
+            <div style="text-align:center;flex:1"><div id="p-date-given" style="border-bottom:2px solid #111;height:32px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;font-weight:bold;font-size:12px"></div><p style="font-size:9px;margin-top:3px;text-transform:uppercase">Date Received</p></div>
+            <div style="text-align:center;flex:1"><div id="p-released-by" style="border-bottom:2px solid #111;height:32px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:3px;font-weight:bold;font-size:12px"></div><p style="font-size:9px;margin-top:3px;text-transform:uppercase">Released By (Staff)</p></div>
+        </div>
+    </div>
+    <div style="margin-top:56px;text-align:center;width:40%;margin-left:auto;margin-right:auto">
+        <div style="border-bottom:2px solid #111;height:36px"></div>
+        <div id="print-sig-name" style="font-weight:bold;margin-top:6px;text-transform:uppercase"></div>
+        <div id="print-sig-title" style="font-size:11px;color:#555"></div>
+    </div>
+</div>
+
+<script>
+    const API_URL   = "https://script.google.com/macros/s/AKfycbzRzIovorVH9oofjA-iilzhywOv6JQ7138yH_XmiyIc_SY9nqlKXG05petJLsOkRtM_/exec";
+    const STORE_KEY = "SOLISYSTEM_DB_OFFICE_2";
+    let GLOBAL_DATA = [];
+    let calendar;
+    let APP_SETTINGS = {
+        officeName:    "Office of Hon. Leopoldo Gironella, Jr.",
+        officeSubtitle:"Sangguniang Panlalawigan Member",
+        sigName:       "HON. LEOPOLDO GIRONELLA, JR.",
+        notifEmail:    ""
+    };
+
+    // ── SETTINGS ──
+    function loadSettings() {
+        const s = localStorage.getItem("SOLISYSTEM_SETTINGS_O2");
+        if (s) APP_SETTINGS = { ...APP_SETTINGS, ...JSON.parse(s) };
+        applySettings();
+    }
+    function applySettings() {
+        const s = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+        s('header-office-name',    APP_SETTINGS.officeName);
+        s('header-office-subtitle',APP_SETTINGS.officeSubtitle);
+        s('print-office-name',     APP_SETTINGS.officeName);
+        s('print-office-subtitle', APP_SETTINGS.officeSubtitle);
+        s('print-sig-name',        APP_SETTINGS.sigName);
+        s('print-sig-title',       APP_SETTINGS.officeSubtitle);
+    }
+    function openSettingsModal() {
+        closeSidebar();
+        document.getElementById('set-office-name').value     = APP_SETTINGS.officeName;
+        document.getElementById('set-office-subtitle').value = APP_SETTINGS.officeSubtitle;
+        document.getElementById('set-sig-name').value        = APP_SETTINGS.sigName;
+        document.getElementById('set-notif-email').value     = APP_SETTINGS.notifEmail || '';
+        // Update push notification status badge in modal
+        updateNotifStatusUI();
+        showModal('settings-modal');
+    }
+    function closeSettingsModal() { hideModal('settings-modal'); }
+    async function saveSettings() {
+        APP_SETTINGS.officeName     = document.getElementById('set-office-name').value     || "Office Name";
+        APP_SETTINGS.officeSubtitle = document.getElementById('set-office-subtitle').value || "Subtitle";
+        APP_SETTINGS.sigName        = document.getElementById('set-sig-name').value        || "Sig Name";
+        APP_SETTINGS.notifEmail     = document.getElementById('set-notif-email').value.trim();
+        localStorage.setItem("SOLISYSTEM_SETTINGS_O2", JSON.stringify(APP_SETTINGS));
+        applySettings();
+        closeSettingsModal();
+        await appAlert("Saved", "Settings saved successfully.", "success");
+    }
+    function updateNotifStatusUI() {
+        const txtEl = document.getElementById('notif-status-text');
+        const btnEl = document.getElementById('btn-enable-notif');
+        if (!txtEl || !btnEl) return;
+        if (!('Notification' in window)) {
+            txtEl.innerText = '❌ Not supported on this browser';
+            btnEl.style.display = 'none';
+        } else if (Notification.permission === 'granted') {
+            txtEl.innerText = '✅ Push notifications are enabled';
+            btnEl.style.display = 'none';
+        } else if (Notification.permission === 'denied') {
+            txtEl.innerText = '🚫 Blocked — please allow in browser settings';
+            btnEl.innerText = 'How to fix';
+            btnEl.onclick = () => appAlert('Allow Notifications', 'Go to your browser address bar → click the 🔒 lock icon → Notifications → Allow.', 'info');
+        } else {
+            txtEl.innerText = '🔔 Not yet enabled — tap to activate';
+            btnEl.style.display = '';
+        }
+    }
+
+    // ── MODAL HELPERS ──
+    function showModal(id){document.getElementById(id).style.display='flex';}
+    function hideModal(id){document.getElementById(id).style.display='none';}
+
+    // ── DIALOG ──
+    function appAlert(title,message,type='info'){return new Promise(resolve=>{_dlg(title,message,type);document.getElementById('dlg-btns').innerHTML=`<button class="dlg-btn ok" id="dlg-ok">Okay</button>`;document.getElementById('app-dialog').classList.add('show');document.getElementById('dlg-ok').onclick=()=>{document.getElementById('app-dialog').classList.remove('show');resolve(true);}});}
+    function appConfirm(title,message,confirmText='Confirm',type='warning'){return new Promise(resolve=>{_dlg(title,message,type);const cls=type==='error'?'danger':'confirm';document.getElementById('dlg-btns').innerHTML=`<button class="dlg-btn cancel" id="dlg-cancel">Cancel</button><button class="dlg-btn ${cls}" id="dlg-yes">${confirmText}</button>`;document.getElementById('app-dialog').classList.add('show');const close=r=>{document.getElementById('app-dialog').classList.remove('show');resolve(r);};document.getElementById('dlg-cancel').onclick=()=>close(false);document.getElementById('dlg-yes').onclick=()=>close(true)});}
+    function _dlg(title,message,type){document.getElementById('dlg-title').innerText=title;document.getElementById('dlg-msg').innerText=message;const map={success:['fa-check','#16a34a','#f0fdf4'],error:['fa-xmark','#ef4444','#fef2f2'],warning:['fa-triangle-exclamation','#d97706','#fefce8'],info:['fa-info','#2563eb','#eff6ff']};const[ic,col,bg]=map[type]||map.info;const inner=document.getElementById('dlg-icon');inner.style.cssText=`background:${bg};color:${col}`;inner.innerHTML=`<i class="fa-solid ${ic}"></i>`;}
+
+    // ── DATA HELPERS ──
+    function cleanDate(val){if(!val)return"";const s=String(val).trim();if(!s||s==='undefined'||s==='null')return"";if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;const mdy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(mdy)return`${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;const d=new Date(s);if(isNaN(d.getTime()))return"";return`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;}
+    function cleanTime(val){if(!val)return"";const s=String(val).trim();if(!s||s==='undefined'||s==='null')return"";if(s.length>8||s.includes('1899')||s.includes('GMT')||s.includes('T')){const d=new Date(s);if(!isNaN(d.getTime()))return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}const parts=s.split(':');if(parts.length>=2)return`${String(parts[0]).padStart(2,'0')}:${String(parts[1]).padStart(2,'0')}`;return"";}
+    function sanitizeData(arr){if(!Array.isArray(arr))return[];return arr.filter(e=>e&&e.id&&e.extendedProps&&e.extendedProps.type).map(e=>{e.start=cleanDate(e.start)||getLocalDate();const p=e.extendedProps;p.type=String(p.type||'solicitation').trim().toLowerCase();p.description=String(p.description||'').trim();p.contact=String(p.contact||'').trim();p.venue=String(p.venue||'').trim();p.address=String(p.address||p.town||'').trim();p.town=p.address;p.brgy=String(p.brgy||'').trim();p.personClaimed=String(p.personClaimed||'').trim();p.releasedBy=String(p.releasedBy||'').trim();const rs=String(p.status||'').trim().toLowerCase();p.status=['done','pending','declined'].includes(rs)?rs:'pending';const ra=parseFloat(String(p.amount!==undefined&&p.amount!==''?p.amount:'0').replace(/[^0-9.-]/g,''));p.amount=isNaN(ra)?'':(ra===0?'':String(ra));p.dateGiven=cleanDate(p.dateGiven);p.time=p.time?cleanTime(p.time):'';return e;});}
+    function getLocalDate(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+    function getLocalTime(){const d=new Date();return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
+    function formatDate(s){if(!s)return'';const d=new Date(s);if(isNaN(d.getTime()))return String(s);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}).toUpperCase();}
+    function formatTime(s){if(!s)return'';const p=String(s).split(':');if(p.length<2)return String(s);let h=parseInt(p[0],10);const ap=h>=12?'PM':'AM';h=h%12||12;return`${h}:${p[1]} ${ap}`;}
+    function generateID(type){const prefix=type==='solicitation'?'S':(type==='event'?'E':'H');const ids=GLOBAL_DATA.filter(x=>x?.id&&String(x.id).startsWith(prefix)).map(x=>parseInt(String(x.id).substring(1))||0);return prefix+String((ids.length?Math.max(...ids):0)+1).padStart(3,'0');}
+
+    // ── SEARCH & FILTER SYNC (keeps mobile and desktop inputs in sync) ──
+    function syncSearch(src){const other=document.getElementById(src.id==='search-m'?'search-d':'search-m');if(other)other.value=src.value;filterData();}
+    function syncFilters(src){const other=document.getElementById(src.id==='filter-status-m'?'filter-status-d':'filter-status-m');if(other)other.value=src.value;filterData();}
+    function getQuery(){const m=document.getElementById('search-m');return m?m.value.toLowerCase():'';}
+    function getFilter(){const m=document.getElementById('filter-status-m');return m?m.value:'all';}
+    function syncViewBtns(v){['vcal-m','vcal-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',v==='calendar');});['vtbl-m','vtbl-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',v==='table');});}
+
+    // ── INIT ──
+    document.addEventListener('DOMContentLoaded', () => {
+        loadSettings();
+        try {
+            const local = localStorage.getItem(STORE_KEY);
+            if (local) GLOBAL_DATA = sanitizeData(JSON.parse(local).filter(e => e?.id && e?.extendedProps));
+        } catch(err) { GLOBAL_DATA = []; }
+
+        initCalendar();
+        renderSchedulePanel();
+        updateCounts();
+        renderTable('solicitation');
+        startNotificationScheduler();
+
+        if (!sessionStorage.getItem('dashboard_seen')) {
+            showDashboard();
+            sessionStorage.setItem('dashboard_seen', 'true');
+        }
+    });
+
+    // ── DASHBOARD ──
+    function showDashboard(){
+        let pending=0,done=0,declined=0,events=0,hearings=0,total=0;
+        GLOBAL_DATA.forEach(e=>{
+            const p=e.extendedProps||{};
+            if(p.type==='solicitation'){
+                if(p.status==='done'){done++;total+=parseFloat(p.amount||0);}
+                else if(p.status==='pending')pending++;
+                else declined++;
+            } else if(p.type==='event') events++;
+            else if(p.type==='hearing') hearings++;
+        });
+        document.getElementById('dash-pending').innerText=pending;
+        document.getElementById('dash-done').innerText=done;
+        document.getElementById('dash-declined').innerText=declined;
+        document.getElementById('dash-events').innerText=events;
+        document.getElementById('dash-hearings').innerText=hearings;
+        document.getElementById('dash-total-amount').innerText='₱'+total.toLocaleString('en-US');
+        showModal('dashboard-modal');
+    }
+    function closeDashboard() { hideModal('dashboard-modal'); }
+
+    // ── SAVE ──
+    function saveDataLocally() {
+        localStorage.setItem(STORE_KEY, JSON.stringify(GLOBAL_DATA));
+        updateCounts();
+        // Refresh calendar events without full destroy/rebuild
+        if (calendar) {
+            calendar.removeAllEvents();
+            calendar.addEventSource(GLOBAL_DATA);
+        }
+        renderSchedulePanel();
+        renderTable(getActiveType(), getQuery(), getFilter());
+    }
+    function getActiveType(){if(document.getElementById('table-hearing').style.display!=='none')return'hearing';if(document.getElementById('table-event').style.display!=='none')return'event';return'solicitation';}
+    function updateCounts(){const c={solicitation:0,event:0,hearing:0};GLOBAL_DATA.forEach(e=>{const t=e.extendedProps?.type;if(c[t]!==undefined)c[t]++;});document.getElementById('cnt-sol').innerText=c.solicitation;document.getElementById('cnt-evt').innerText=c.event;document.getElementById('cnt-hrg').innerText=c.hearing;}
+
+    // ── FORM SAVE ──
+    async function saveForm(){
+        const type=document.getElementById('entry-type').value;
+        const id=document.getElementById('entry-id').value||generateID(type);
+        const isSol=type==='solicitation';
+        const v=(fid)=>{const el=document.getElementById(fid);return el?el.value.trim():'';};
+        if(isSol){if(!v('title')){await appAlert("Required","Please enter a name.","warning");return;}if(!v('date')){await appAlert("Required","Please select a date.","warning");return;}}
+        else{if(!v('evt-title')){await appAlert("Required","Please enter a title.","warning");return;}if(!v('evt-date')){await appAlert("Required","Please select a date.","warning");return;}}
+        let entry;
+        if(isSol){const addr=v('address');entry={id,controlNo:id,title:v('title'),start:v('date'),extendedProps:{type:'solicitation',description:v('description'),address:addr,town:addr,brgy:'',contact:v('contact'),status:v('status'),amount:v('amount'),personClaimed:v('person-claimed'),dateGiven:v('date-given'),releasedBy:v('released-by'),time:'',venue:''}};}
+        else{entry={id,controlNo:id,title:v('evt-title'),start:v('evt-date'),extendedProps:{type,time:v('time'),venue:v('venue'),description:v('evt-description'),address:'',town:'',brgy:'',contact:'',status:'n/a',amount:'',personClaimed:'',dateGiven:'',releasedBy:''}};}
+        const idx=GLOBAL_DATA.findIndex(x=>x.id==id);if(idx>-1)GLOBAL_DATA[idx]=entry;else GLOBAL_DATA.push(entry);
+        saveDataLocally();closeModal();await appAlert("Saved","Record saved to your device.","success");
+    }
+
+    // ── DELETE ──
+    async function deleteEntry(){const ok=await appConfirm("Delete Record","Permanently delete this entry?","Delete","error");if(!ok)return;GLOBAL_DATA=GLOBAL_DATA.filter(e=>e.id!=document.getElementById('entry-id').value);saveDataLocally();closeModal();await appAlert("Deleted","Record removed.","success");}
+
+    // ── CLOUD ──
+    async function syncToCloud(){
+        const btns=['btn-upload-d','btn-upload-m','btn-sync'].map(id=>document.getElementById(id)).filter(Boolean);
+        const origs=btns.map(b=>b.innerHTML);
+        btns.forEach(b=>{b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';b.disabled=true;});
+        try{
+            const payload = {
+                action:     "sync",
+                data:       GLOBAL_DATA,
+                notifEmail: APP_SETTINGS.notifEmail || ""
+            };
+            const res=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});
+            const r=await res.json();
+            if(r.result==="success") await appAlert("Upload OK","Data synced to Google Sheets.","success");
+            else await appAlert("Upload Failed",r.message,"error");
+        }
+        catch{await appAlert("Connection Error","Check internet and try again.","error");}
+        finally{btns.forEach((b,i)=>{b.innerHTML=origs[i];b.disabled=false;});}
+    }
+    async function downloadFromCloud(){const ok=await appConfirm("Restore from Cloud","This will overwrite your local data.","Overwrite","warning");if(!ok)return;const btn=document.getElementById('btn-download');const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';btn.disabled=true;try{const url=API_URL+(API_URL.includes('?')?'&':'?')+'action=download&t='+Date.now();const res=await fetch(url,{method:'GET'});if(!res.ok)throw new Error("Network error.");const result=JSON.parse(await res.text());if(result.result==="success"){GLOBAL_DATA=sanitizeData(result.data);saveDataLocally();await appAlert("Restored","Data restored from cloud.","success");location.reload();}else await appAlert("Failed",result.message,"error");}catch(e){await appAlert("Failed",e.message,"error");}finally{btn.innerHTML=orig;btn.disabled=false;}}
+    function downloadBackup(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(GLOBAL_DATA));a.download="solisystem_backup_"+getLocalDate()+".json";document.body.appendChild(a);a.click();a.remove();}
+    function restoreBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){GLOBAL_DATA=sanitizeData(d);saveDataLocally();await appAlert("Restored","Backup loaded.","success");}else await appAlert("Invalid File","Not a valid backup.","error");}catch{await appAlert("Error","Could not read file.","error");}};r.readAsText(file);}
+    async function hardReset(){const ok=await appConfirm("Wipe Data","Delete ALL local data permanently?","Wipe","error");if(ok){localStorage.removeItem(STORE_KEY);location.reload();}}
+
+    // ── SIDEBAR ──
+    function toggleSidebar(){const s=document.getElementById('sidebar'),o=document.getElementById('overlay');if(s.classList.contains('open')){s.classList.remove('open');o.classList.remove('show');}else{s.classList.add('open');o.classList.add('show');}}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+
+    // ── VIEWS ──
+    function switchView(v){const cal=document.getElementById('view-calendar'),tbl=document.getElementById('view-table');if(v==='calendar'){cal.style.display='';tbl.style.display='none';setTimeout(()=>calendar&&calendar.render(),50);}else{cal.style.display='none';tbl.style.display='flex';filterData();}syncViewBtns(v);}
+    function switchTableTab(type){['solicitation','event','hearing'].forEach(t=>{document.getElementById(`table-${t}`).style.display=t===type?'block':'none';const map={solicitation:'sol',event:'evt',hearing:'hrg'};document.getElementById(`tab-${map[t]}`).classList.toggle('active',t===type);});['filter-status-m','filter-status-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=type==='solicitation'?'':'none';});filterData();}
+    function filterData(){renderTable(getActiveType(),getQuery(),getFilter());}
+
+    // ── TABLE RENDER ──
+    function renderTable(type,query="",statusFilter="all"){
+        const map={solicitation:'tbody-sol',event:'tbody-evt',hearing:'tbody-hrg'};
+        const tbody=document.getElementById(map[type]);if(!tbody)return;tbody.innerHTML='';
+        let data=GLOBAL_DATA.filter(e=>e.extendedProps?.type===type);
+        if(query)data=data.filter(e=>`${e.title} ${e.id} ${e.extendedProps?.address||e.extendedProps?.town||''}`.toLowerCase().includes(query));
+        if(type==='solicitation'&&statusFilter!=='all')data=data.filter(e=>e.extendedProps?.status===statusFilter);
+        data.sort((a,b)=>new Date(b.start)-new Date(a.start));
+        if(!data.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>No records found.</p></div></td></tr>`;return;}
+        data.forEach(e=>{
+            const p=e.extendedProps||{};const tr=document.createElement('tr');tr.onclick=()=>openModal(e);
+            if(type==='solicitation'){const addr=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'—';const bc=p.status==='done'?'badge-done':p.status==='declined'?'badge-declined':'badge-pending';tr.innerHTML=`<td class="td-id-c"><span class="td-id">${e.id}</span></td><td class="td-date-c"><span class="td-date">${formatDate(e.start)}</span></td><td class="td-name-c"><span class="td-name">${e.title}</span></td><td style="font-size:12px;color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description||'—'}</td><td class="td-addr-c"><span class="td-addr">${addr}</span></td><td class="td-status-c"><span class="badge ${bc}">${p.status}</span></td><td class="td-amt-c"><span class="td-amt">₱${parseFloat(p.amount||0).toLocaleString()}</span></td>`;}
+            else{const time=p.time?`<div class="td-sub">${formatTime(p.time)}</div>`:'';tr.innerHTML=`<td class="td-evt-id"><span class="td-id">${e.id}</span></td><td class="td-evt-date"><span class="td-date">${formatDate(e.start)}</span>${time}</td><td class="td-evt-name"><span class="td-name">${e.title}</span></td><td class="td-evt-venue"><span class="td-addr">${p.venue||'—'}</span></td><td class="td-evt-notes" style="color:#64748b;font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description||'—'}</td>`;}
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ── CSV ──
+    function exportCSV(){const type=getActiveType(),q=getQuery(),sf=getFilter();let data=GLOBAL_DATA.filter(e=>e.extendedProps?.type===type);if(q)data=data.filter(e=>`${e.title} ${e.id} ${e.extendedProps?.address||''}`.toLowerCase().includes(q));if(type==='solicitation'&&sf!=='all')data=data.filter(e=>e.extendedProps?.status===sf);let csv=type==='solicitation'?"ID,Date,Name,Description,Address,Contact,Status,Amount,DateReceived,ClaimedBy,ReleasedBy\n":"ID,Date,Time,Title,Venue,Notes\n";data.forEach(e=>{const p=e.extendedProps||{};if(type==='solicitation'){const addr=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';csv+=`${e.id},${e.start},"${e.title}","${p.description||''}","${addr}","${p.contact||''}",${p.status},${p.amount||0},${p.dateGiven||''},"${p.personClaimed||''}","${p.releasedBy||''}"\n`;}else{csv+=`${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;}});const a=document.createElement('a');a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download=`solisystem_${type}_${getLocalDate()}.csv`;document.body.appendChild(a);a.click();a.remove();}
+
+    // ── CALENDAR ──
+    function initCalendar(){const el=document.getElementById('calendar');if(calendar)calendar.destroy();calendar=new FullCalendar.Calendar(el,{initialView:window.innerWidth<640?'listWeek':'dayGridMonth',headerToolbar:{left:'prev,next',center:'title',right:window.innerWidth<640?'today':'dayGridMonth,listWeek,today'},height:'100%',events:GLOBAL_DATA,allDayText:'',eventClassNames:arg=>{const t=arg.event.extendedProps?.type;if(t==='solicitation')return['evt-solicit'];if(t==='hearing')return['evt-hearing'];return['evt-office'];},dateClick:info=>openModal(null,info.dateStr),eventClick:info=>openModal(info.event)});calendar.render();}
+
+    // ── RIGHT PANEL ──
+    function toggleRightPanel(){document.getElementById('right-panel').classList.toggle('rp-hidden');setTimeout(()=>calendar&&calendar.render(),320);}
+    function renderSchedulePanel(){const list=document.getElementById('upcoming-list');list.innerHTML='';const today=getLocalDate();const upcoming=GLOBAL_DATA.filter(e=>e.start>=today&&(e.extendedProps?.type==='event'||e.extendedProps?.type==='hearing')).sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,10);if(!upcoming.length){list.innerHTML='<p style="text-align:center;font-size:12px;color:#94a3b8;padding:24px 0;font-style:italic">No upcoming events or hearings.</p>';return;}upcoming.forEach(e=>{const p=e.extendedProps||{};const days=Math.ceil((new Date(e.start)-new Date(today))/86400000);const cls=days<=1?'urgent':days<=2?'soon':(p.type==='hearing'?'is-hearing':'is-event');const alert=days<=1?'<i class="fa-solid fa-circle-exclamation" style="color:#ef4444"></i>':days===2?'<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i>':'';const typeBadge=p.type==='hearing'?`<span class="badge badge-hearing" style="font-size:9px;padding:1px 6px">Hearing</span>`:`<span class="badge badge-event" style="font-size:9px;padding:1px 6px">Event</span>`;const venue=p.venue?`<div class="sched-venue"><i class="fa-solid fa-location-dot"></i>${p.venue}</div>`:'';const time=p.time?formatTime(p.time)+' · ':'';const div=document.createElement('div');div.className=`sched-item ${cls}`;div.onclick=()=>{const rec=GLOBAL_DATA.find(x=>x.id===e.id);if(rec)openModal(rec);};div.innerHTML=`<div class="sched-meta"><span>${time}${formatDate(e.start)}</span>${alert}</div><div class="sched-name">${e.title} ${typeBadge}</div>${venue}`;list.appendChild(div);});}
+
+    // ── MODAL OPEN/CLOSE ──
+    function openModal(event=null,dateStr=null){document.getElementById('main-form').reset();const del=document.getElementById('btn-delete'),prnt=document.getElementById('btn-print');if(event){const raw=event.extendedProps?event:(GLOBAL_DATA.find(x=>x.id==event.id)||event);const p=raw.extendedProps||{};const dVal=cleanDate(raw.startStr||raw.start||getLocalDate());const type=p.type||'solicitation';document.getElementById('entry-id').value=raw.id;document.getElementById('modal-title-text').innerText=`Edit ${raw.id}`;switchMode(type);if(type==='solicitation'){document.getElementById('title').value=raw.title||'';document.getElementById('date').value=dVal;document.getElementById('description').value=p.description||'';document.getElementById('address').value=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';document.getElementById('contact').value=p.contact||'';document.getElementById('status').value=p.status||'pending';document.getElementById('amount').value=p.amount||'';document.getElementById('person-claimed').value=p.personClaimed||'';document.getElementById('date-given').value=cleanDate(p.dateGiven);document.getElementById('released-by').value=p.releasedBy||'';toggleAuditFields();prnt.style.display='';}else{document.getElementById('evt-title').value=raw.title||'';document.getElementById('evt-date').value=dVal;document.getElementById('time').value=p.time?cleanTime(p.time):'';document.getElementById('venue').value=p.venue||'';document.getElementById('evt-description').value=p.description||'';prnt.style.display='none';}del.style.display='';}else{document.getElementById('entry-id').value='';document.getElementById('modal-title-text').innerText="New Record";const today=dateStr||getLocalDate();document.getElementById('date').value=today;document.getElementById('evt-date').value=today;document.getElementById('time').value=getLocalTime();document.getElementById('address').value='';switchMode(getActiveType());toggleAuditFields();del.style.display='none';prnt.style.display='none';}showModal('entry-modal');}
+    function closeModal(){hideModal('entry-modal');}
+
+    // ── MODE SWITCH ──
+    function switchMode(mode){document.getElementById('entry-type').value=mode;const isSol=mode==='solicitation',isEvtHrg=mode==='event'||mode==='hearing';document.getElementById('group-sol-fields').style.display=isSol?'':'none';document.getElementById('group-evt-fields').style.display=isEvtHrg?'':'none';if(isSol){const isNew=!document.getElementById('entry-id').value;document.getElementById('processing-fields').style.display=isNew?'none':'';document.getElementById('btn-show-processing').style.display=isNew?'':'none';}const etl=document.getElementById('label-evt-title'),edl=document.getElementById('label-evt-desc');if(etl)etl.innerText=mode==='hearing'?'Hearing Title':'Event Name';if(edl)edl.innerText=mode==='hearing'?'Notes / Description':'Event Note';['solicitation','event','hearing'].forEach(m=>{const ids={solicitation:'btn-solicitation',event:'btn-event',hearing:'btn-hearing'};document.getElementById(ids[m]).classList.toggle('active',m===mode);});}
+    function revealProcessing(){document.getElementById('processing-fields').style.display='';document.getElementById('btn-show-processing').style.display='none';}
+    function toggleAuditFields(){const s=document.getElementById('status').value;const sec=document.getElementById('audit-section');sec.style.display=s==='done'?'':'none';if(s==='done'){if(!document.getElementById('date-given').value)document.getElementById('date-given').value=getLocalDate();if(!document.getElementById('person-claimed').value)document.getElementById('person-claimed').value=document.getElementById('title').value;}}
+
+    // ── PRINT ──
+    function printVoucher(){const entry=GLOBAL_DATA.find(x=>x.id==document.getElementById('entry-id').value);const g=id=>{const el=document.getElementById(id);return el?el.value:'';};const s=(id,v)=>{const el=document.getElementById(id);if(el)el.innerText=v||'';};s('p-date',formatDate(g('date')));s('p-control',entry?entry.id:"NEW");s('p-name',g('title'));s('p-address',g('address'));s('p-amount',g('amount'));s('p-desc',g('description'));s('p-claimed-by',g('person-claimed'));s('p-date-given',formatDate(g('date-given')));s('p-released-by',g('released-by'));window.print();}
+
+    if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+
+    // ══════════════════════════════════════════════════════════════
+    //  NOTIFICATION ENGINE
+    //  Push: Browser Notification API via Service Worker
+    //  Email: Handled by Google Apps Script time-based trigger
+    //  Schedule: App checks every minute, fires push at 08:00
+    // ══════════════════════════════════════════════════════════════
+
+    // ── REQUEST PUSH PERMISSION ──
+    async function requestNotifPermission() {
+        if (!('Notification' in window)) {
+            await appAlert("Not Supported", "Push notifications are not supported on this browser.", "warning");
+            return;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+            updateNotifStatusUI();
+            await appAlert(
+                "Notifications Enabled! 🔔",
+                "You will receive push reminders at 8:00 AM daily for upcoming events and hearings.",
+                "success"
+            );
+        } else if (perm === 'denied') {
+            await appAlert(
+                "Blocked",
+                "Notifications are blocked. Go to your browser settings → click the lock icon in the address bar → set Notifications to Allow.",
+                "warning"
+            );
+        }
+    }
+
+    // ── DATE HELPERS ──
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function getTomorrowStr() {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function niceDateFull(s) {
+        if (!s) return '';
+        const d = new Date(s + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    }
+
+    // ── GET EVENTS/HEARINGS FOR A SPECIFIC DATE ──
+    function getEventsForDate(dateStr) {
+        return GLOBAL_DATA.filter(e => {
+            const p = e.extendedProps || {};
+            return e.start === dateStr && (p.type === 'event' || p.type === 'hearing');
+        });
+    }
+
+    // ── BUILD READABLE EVENT LIST ──
+    function buildEventSummary(events) {
+        return events.map(e => {
+            const p         = e.extendedProps || {};
+            const typeLabel = p.type === 'hearing' ? '⚖️ Hearing' : '📅 Event';
+            const timeStr   = p.time  ? ` at ${formatTime(p.time)}`  : '';
+            const venueStr  = p.venue ? ` • ${p.venue}` : '';
+            return `${typeLabel}: ${e.title}${timeStr}${venueStr}`;
+        }).join('\n');
+    }
+
+    // ── SEND PUSH NOTIFICATION via Service Worker ──
+    function sendPushNotification(title, body, tag) {
+        if (Notification.permission !== 'granted') return;
+
+        const opts = {
+            body,
+            icon:               './icon-192.png',
+            badge:              './icon-192.png',
+            tag,
+            renotify:           true,
+            requireInteraction: true,
+            vibrate:            [200, 100, 200]
         };
 
-        function loadSettings() {
-            const saved = localStorage.getItem("SOLISYSTEM_SETTINGS");
-            if(saved) { APP_SETTINGS = { ...APP_SETTINGS, ...JSON.parse(saved) }; }
-            applySettingsToDOM();
-        }
-
-        function applySettingsToDOM() {
-            if(document.getElementById('header-office-name')) document.getElementById('header-office-name').innerText = APP_SETTINGS.officeName;
-            if(document.getElementById('header-office-subtitle')) document.getElementById('header-office-subtitle').innerText = APP_SETTINGS.officeSubtitle;
-            if(document.getElementById('print-office-name')) document.getElementById('print-office-name').innerText = APP_SETTINGS.officeName;
-            if(document.getElementById('print-office-subtitle')) document.getElementById('print-office-subtitle').innerText = APP_SETTINGS.officeSubtitle;
-            if(document.getElementById('print-sig-name')) document.getElementById('print-sig-name').innerText = APP_SETTINGS.sigName;
-            if(document.getElementById('print-sig-title')) document.getElementById('print-sig-title').innerText = APP_SETTINGS.officeSubtitle;
-        }
-
-        function openSettingsModal() {
-            document.getElementById('sidebar').classList.add('-translate-x-full');
-            document.getElementById('set-office-name').value = APP_SETTINGS.officeName;
-            document.getElementById('set-office-subtitle').value = APP_SETTINGS.officeSubtitle;
-            document.getElementById('set-sig-name').value = APP_SETTINGS.sigName;
-            document.getElementById('settings-modal').classList.remove('hidden');
-        }
-
-        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
-
-        async function saveSettings() {
-            APP_SETTINGS.officeName = document.getElementById('set-office-name').value || "Office Name";
-            APP_SETTINGS.officeSubtitle = document.getElementById('set-office-subtitle').value || "Subtitle";
-            APP_SETTINGS.sigName = document.getElementById('set-sig-name').value || "Signature Name";
-            
-            localStorage.setItem("SOLISYSTEM_SETTINGS", JSON.stringify(APP_SETTINGS));
-            applySettingsToDOM();
-            closeSettingsModal();
-            await appAlert("Profile Saved", "Your official office details have been updated successfully.", "success");
-        }
-        
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(()=>{}); });
+            navigator.serviceWorker.ready
+                .then(reg  => reg.showNotification(title, opts))
+                .catch(()  => new Notification(title, opts));
+        } else {
+            new Notification(title, opts);
         }
+    }
 
-        function appAlert(title, message, type = 'info') {
-            return new Promise((resolve) => {
-                const d = document.getElementById('app-dialog');
-                const box = document.getElementById('app-dialog-box');
-                document.getElementById('app-dialog-title').innerText = title;
-                document.getElementById('app-dialog-msg').innerText = message;
-                
-                let iconHtml = '';
-                if(type === 'success') iconHtml = '<div class="mx-auto w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-2xl mb-2"><i class="fa-solid fa-check"></i></div>';
-                else if(type === 'error') iconHtml = '<div class="mx-auto w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl mb-2"><i class="fa-solid fa-xmark"></i></div>';
-                else if(type === 'warning') iconHtml = '<div class="mx-auto w-14 h-14 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-2xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i></div>';
-                else iconHtml = '<div class="mx-auto w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-2"><i class="fa-solid fa-info"></i></div>';
-                document.getElementById('app-dialog-icon').innerHTML = iconHtml;
-
-                const btnHtml = `<button id="app-dialog-ok" class="w-full py-4 text-sm font-bold text-slate-800 hover:bg-slate-200 transition">Okay</button>`;
-                document.getElementById('app-dialog-btns').innerHTML = btnHtml;
-
-                d.classList.remove('hidden');
-                setTimeout(() => { d.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
-
-                document.getElementById('app-dialog-ok').onclick = () => {
-                    d.classList.add('opacity-0'); box.classList.add('scale-95');
-                    setTimeout(() => { d.classList.add('hidden'); resolve(true); }, 200);
-                };
-            });
+    // ── MAIN DAILY CHECK — runs at 08:00 AM ──
+    // ── PARSE EVENT TIME → { hh, mm } or null ──
+    // Returns the hour/minute from an event's time field.
+    // Falls back to 08:00 if no time is set.
+    function parseEventTime(timeStr) {
+        if (!timeStr || timeStr.trim() === '') return { hh: 8, mm: 0 }; // default 8AM
+        const parts = timeStr.split(':');
+        if (parts.length >= 2) {
+            const hh = parseInt(parts[0], 10);
+            const mm = parseInt(parts[1], 10);
+            if (!isNaN(hh) && !isNaN(mm)) return { hh, mm };
         }
+        return { hh: 8, mm: 0 };
+    }
 
-        function appConfirm(title, message, confirmText = 'Confirm', type = 'warning') {
-            return new Promise((resolve) => {
-                const d = document.getElementById('app-dialog');
-                const box = document.getElementById('app-dialog-box');
-                document.getElementById('app-dialog-title').innerText = title;
-                document.getElementById('app-dialog-msg').innerText = message;
-                
-                let iconHtml = '';
-                if(type === 'error') iconHtml = '<div class="mx-auto w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-2xl mb-2"><i class="fa-solid fa-triangle-exclamation"></i></div>';
-                else iconHtml = '<div class="mx-auto w-14 h-14 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center text-2xl mb-2"><i class="fa-solid fa-circle-exclamation"></i></div>';
-                document.getElementById('app-dialog-icon').innerHTML = iconHtml;
+    // ── CHECK IF NOW MATCHES A TARGET TIME (within the same minute) ──
+    function isTimeNow(hh, mm) {
+        const now = new Date();
+        return now.getHours() === hh && now.getMinutes() === mm;
+    }
 
-                const colorClass = type === 'error' ? 'text-red-600 hover:bg-red-100' : 'text-blue-600 hover:bg-blue-100';
-                const btnHtml = `
-                    <button id="app-dialog-cancel" class="flex-1 py-4 text-sm font-bold text-slate-500 hover:bg-slate-200 transition border-r border-slate-200">Cancel</button>
-                    <button id="app-dialog-yes" class="flex-1 py-4 text-sm font-bold transition ${colorClass}">${confirmText}</button>
-                `;
-                document.getElementById('app-dialog-btns').innerHTML = btnHtml;
+    // ── SUBTRACT 1 HOUR from a time object, floor at 00:00 ──
+    function oneHourBefore(hh, mm) {
+        let h = hh - 1;
+        if (h < 0) h = 0;
+        return { hh: h, mm };
+    }
 
-                d.classList.remove('hidden');
-                setTimeout(() => { d.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
+    // ── MAIN SCHEDULER TICK — called every minute ──
+    // Logic:
+    //   For each event/hearing TOMORROW  → notify at the event's own time today
+    //   For each event/hearing TODAY     → notify 1 hour before the event time
+    //   If event has no time             → fall back to 08:00
+    //   Each notification fires only ONCE per event per day (keyed by event id + date)
+    async function runNotificationCheck(forceRun = false) {
+        const today    = getTodayStr();
+        const tomorrow = getTomorrowStr();
+        const now      = new Date();
+        let   fired    = 0;
 
-                const close = (result) => {
-                    d.classList.add('opacity-0'); box.classList.add('scale-95');
-                    setTimeout(() => { d.classList.add('hidden'); resolve(result); }, 200);
-                };
+        // ── TOMORROW'S EVENTS — notify at the event's time, today ──
+        const tmrEvents = getEventsForDate(tomorrow);
+        tmrEvents.forEach(e => {
+            const p       = e.extendedProps || {};
+            const evtTime = parseEventTime(p.time);       // e.g. 14:00
+            const fireAt  = evtTime;                       // fire today at that same time
 
-                document.getElementById('app-dialog-cancel').onclick = () => close(false);
-                document.getElementById('app-dialog-yes').onclick = () => close(true);
-            });
-        }
+            const fireKey = `NOTIF_TMR_${e.id}_${today}`;
+            const shouldFire = forceRun || (
+                isTimeNow(fireAt.hh, fireAt.mm) &&
+                !sessionStorage.getItem(fireKey)
+            );
 
-        function cleanDate(val) {
-            if (!val) return "";
-            const d = new Date(val);
-            if (isNaN(d.getTime())) return val; 
-            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-
-        function cleanTime(val) {
-            if (!val) return "";
-            if (val.includes("1899") || val.length > 10) {
-                const d = new Date(val);
-                if (!isNaN(d.getTime())) {
-                    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-                }
-            }
-            const parts = String(val).split(':');
-            if (parts.length >= 2) {
-                return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
-            }
-            return val;
-        }
-
-        function sanitizeData(dataArray) {
-            return dataArray.map(e => {
-                if (e.start) e.start = cleanDate(e.start);
-                if (e.extendedProps) {
-                    if (e.extendedProps.dateGiven) e.extendedProps.dateGiven = cleanDate(e.extendedProps.dateGiven);
-                    if (e.extendedProps.time) e.extendedProps.time = cleanTime(e.extendedProps.time);
-                }
-                return e;
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => { 
-            loadSettings(); 
-            try {
-                let localData = localStorage.getItem(STORE_KEY);
-                if (!localData) {
-                    localData = localStorage.getItem("SOLISYSTEM_DB_V44") || localStorage.getItem("SOLISYSTEM_DB_V43") || localStorage.getItem("SOLISYSTEM_DB_V42");
-                    if (localData) localStorage.setItem(STORE_KEY, localData);
-                }
-                if (localData) { 
-                    GLOBAL_DATA = sanitizeData(JSON.parse(localData).filter(e => e && e.id && e.extendedProps)); 
-                }
-            } catch(e) { GLOBAL_DATA = []; }
-            
-            initCalendar();
-            renderSidebar();
-            renderTable('solicitation'); 
-            
-            if(!sessionStorage.getItem('dashboard_seen')) {
-                showDashboard();
-                sessionStorage.setItem('dashboard_seen', 'true');
+            if (shouldFire) {
+                sessionStorage.setItem(fireKey, '1');
+                const timeLabel = p.time ? ` at ${formatTime(p.time)}` : '';
+                const venueLabel = p.venue ? ` • ${p.venue}` : '';
+                const typeIcon = p.type === 'hearing' ? '⚖️' : '📅';
+                sendPushNotification(
+                    `${typeIcon} Tomorrow: ${e.title}`,
+                    `${e.title}${timeLabel}${venueLabel}
+Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
+                    `notif-tmr-${e.id}-${today}`
+                );
+                fired++;
+                console.log(`[Notif] Tomorrow reminder fired for "${e.title}" at ${fireAt.hh}:${String(fireAt.mm).padStart(2,'0')}`);
             }
         });
 
-        function showDashboard() {
-            let pending = 0, done = 0, declined = 0, events = 0, hearings = 0;
-            
-            GLOBAL_DATA.forEach(e => {
-                const p = e.extendedProps || {};
-                if(p.type === 'solicitation') {
-                    if(p.status === 'done') done++;
-                    else if(p.status === 'pending') pending++;
-                    else declined++;
-                } else if(p.type === 'event') {
-                    events++; 
-                } else if(p.type === 'hearing') {
-                    hearings++; 
-                }
-            });
+        // ── TODAY'S EVENTS — notify 1 hour before the event time ──
+        const todayEvents = getEventsForDate(today);
+        todayEvents.forEach(e => {
+            const p       = e.extendedProps || {};
+            const evtTime = parseEventTime(p.time);       // e.g. 14:00
+            const fireAt  = oneHourBefore(evtTime.hh, evtTime.mm); // e.g. 13:00
 
-            document.getElementById('dash-pending').innerText = pending;
-            document.getElementById('dash-done').innerText = done;
-            document.getElementById('dash-declined').innerText = declined;
-            document.getElementById('dash-events').innerText = events;
-            document.getElementById('dash-hearings').innerText = hearings;
-            
-            let totalAmount = GLOBAL_DATA
-                .filter(x => x.extendedProps && x.extendedProps.type === 'solicitation' && x.extendedProps.status === 'done')
-                .reduce((sum, x) => sum + parseFloat(x.extendedProps.amount || 0), 0);
-            document.getElementById('dash-total-amount').innerText = "₱" + totalAmount.toLocaleString('en-US');
+            const fireKey = `NOTIF_TODAY_${e.id}_${today}`;
+            const shouldFire = forceRun || (
+                isTimeNow(fireAt.hh, fireAt.mm) &&
+                !sessionStorage.getItem(fireKey)
+            );
 
-            document.getElementById('dashboard-modal').classList.remove('hidden');
-        }
-        
-        function closeDashboard() { document.getElementById('dashboard-modal').classList.add('hidden'); }
-
-        function getLocalDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-        function getLocalTime() { const d = new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-
-        function formatDate(dateStr) {
-            if (!dateStr) return '';
-            const d = new Date(dateStr);
-            if (isNaN(d.getTime())) return dateStr;
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
-        }
-
-        function formatTime(timeStr) {
-            if (!timeStr) return '';
-            const parts = timeStr.split(':');
-            if(parts.length !== 2) return timeStr;
-            let h = parseInt(parts[0], 10);
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12 || 12;
-            return `${h}:${parts[1]} ${ampm}`;
-        }
-
-        function generateID(type) {
-            const prefix = type === 'solicitation' ? 'S' : (type === 'event' ? 'E' : 'H');
-            const existingIds = GLOBAL_DATA.filter(x => x && x.id && String(x.id).startsWith(prefix)).map(x => parseInt(String(x.id).substring(1)) || 0);
-            const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
-            return prefix + String(maxId + 1).padStart(3, '0');
-        }
-
-        function saveDataLocally() {
-            localStorage.setItem(STORE_KEY, JSON.stringify(GLOBAL_DATA));
-            initCalendar(); 
-            renderSidebar(); 
-            
-            let activeType = 'solicitation';
-            if(!document.getElementById('table-hearing').classList.contains('hidden')) activeType = 'hearing';
-            else if(!document.getElementById('table-event').classList.contains('hidden')) activeType = 'event';
-            
-            renderTable(activeType, document.getElementById('search-input').value.toLowerCase(), document.getElementById('table-filter-status').value);
-        }
-
-        async function saveForm() {
-            const form = document.getElementById('main-form');
-            if(!form.checkValidity()) { form.reportValidity(); return; }
-            
-            const title = document.getElementById('title').value;
-            const date = document.getElementById('date').value;
-            const type = document.getElementById('entry-type').value;
-            const id = document.getElementById('entry-id').value || generateID(type);
-            const addressVal = document.getElementById('address') ? document.getElementById('address').value : "";
-
-            const entry = {
-                id: id, controlNo: id, title: title, start: date,
-                extendedProps: {
-                    type: type,
-                    description: type === 'solicitation' ? document.getElementById('description').value : document.getElementById('evt-description').value,
-                    category: "", 
-                    time: document.getElementById('time') ? document.getElementById('time').value : '',
-                    venue: document.getElementById('venue') ? document.getElementById('venue').value : '',
-                    status: document.getElementById('status').value,
-                    amount: document.getElementById('amount').value,
-                    contact: document.getElementById('contact').value,
-                    address: addressVal, town: addressVal, brgy: "",
-                    personClaimed: document.getElementById('person-claimed').value,
-                    dateGiven: document.getElementById('date-given').value,
-                    releasedBy: document.getElementById('released-by').value 
-                }
-            };
-
-            const index = GLOBAL_DATA.findIndex(x => x.id == id);
-            if (index > -1) GLOBAL_DATA[index] = entry; else GLOBAL_DATA.push(entry);
-            
-            saveDataLocally(); 
-            closeModal();
-            await appAlert("Saved Successfully", "The record has been securely saved to your tablet.", "success");
-        }
-
-        async function deleteEntry() {
-            const confirmed = await appConfirm("Delete Record", "Are you sure you want to permanently delete this entry? This action cannot be undone.", "Delete", "error");
-            if(!confirmed) return;
-            const id = document.getElementById('entry-id').value;
-            GLOBAL_DATA = GLOBAL_DATA.filter(e => e.id != id);
-            saveDataLocally(); closeModal();
-            await appAlert("Deleted", "The record has been permanently removed.", "success");
-        }
-
-        async function syncToCloud() {
-            const btnSidebar = document.getElementById('btn-sync');
-            const btnHeader = document.getElementById('btn-sync-header');
-            const origSidebarHTML = btnSidebar ? btnSidebar.innerHTML : '';
-            const origHeaderHTML = btnHeader ? btnHeader.innerHTML : '';
-            
-            if (btnSidebar) { btnSidebar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...'; btnSidebar.disabled = true; btnSidebar.classList.add('opacity-80', 'cursor-not-allowed'); }
-            if (btnHeader) { btnHeader.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span class="hidden md:inline">Uploading...</span>'; btnHeader.disabled = true; btnHeader.classList.add('opacity-80', 'cursor-not-allowed'); }
-
-            try {
-                const response = await fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "sync", data: GLOBAL_DATA }) });
-                const result = await response.json();
-                if(result.result === "success") { await appAlert("Upload Successful", "All local data has been successfully synced to your Google Sheet.", "success"); } 
-                else { await appAlert("Upload Failed", "There was an error communicating with the sheet: " + result.message, "error"); }
-            } catch (error) { 
-                await appAlert("Connection Error", "Upload failed. Please check your internet connection and try again.", "error"); 
-            } finally { 
-                if (btnSidebar) { btnSidebar.innerHTML = origSidebarHTML; btnSidebar.disabled = false; btnSidebar.classList.remove('opacity-80', 'cursor-not-allowed'); }
-                if (btnHeader) { btnHeader.innerHTML = origHeaderHTML; btnHeader.disabled = false; btnHeader.classList.remove('opacity-80', 'cursor-not-allowed'); }
+            if (shouldFire) {
+                sessionStorage.setItem(fireKey, '1');
+                const timeLabel  = p.time ? ` at ${formatTime(p.time)}` : ' today';
+                const venueLabel = p.venue ? ` • ${p.venue}` : '';
+                const typeIcon   = p.type === 'hearing' ? '⚖️' : '📅';
+                const inLabel    = p.time ? `Starting in 1 hour` : `Scheduled today`;
+                sendPushNotification(
+                    `${typeIcon} Today: ${e.title}${timeLabel}!`,
+                    `${inLabel}${venueLabel}`,
+                    `notif-today-${e.id}-${today}`
+                );
+                fired++;
+                console.log(`[Notif] Today reminder fired for "${e.title}" — 1hr before at ${fireAt.hh}:${String(fireAt.mm).padStart(2,'0')}`);
             }
-        }
+        });
 
-        // ====== FIXED DOWNLOAD ROUTE: Uses the standard secure GET method ======
-        async function downloadFromCloud() {
-            const confirmed = await appConfirm("Restore from Cloud", "WARNING: This will replace your tablet's current data with the data from Google Sheets. Are you sure you want to overwrite?", "Overwrite Data", "warning");
-            if(!confirmed) return;
-
-            const btnSidebar = document.getElementById('btn-download');
-            const origSidebarHTML = btnSidebar ? btnSidebar.innerHTML : '';
-
-            if (btnSidebar) {
-                btnSidebar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';
-                btnSidebar.disabled = true;
-                btnSidebar.classList.add('opacity-80', 'cursor-not-allowed');
-            }
-
-            try {
-                // FIXED: We now use the proper GET door to fetch data safely.
-                const cacheBuster = "?action=download&t=" + new Date().getTime();
-                const response = await fetch(API_URL + cacheBuster, { method: 'GET' });
-                const text = await response.text(); 
-                
-                let result;
-                try {
-                    result = JSON.parse(text);
-                } catch(e) {
-                    throw new Error("Google did not return valid data. Please ensure your script is deployed as a 'New Version'.");
-                }
-                
-                if(result.result === "success") { 
-                    GLOBAL_DATA = sanitizeData(result.data);
-                    saveDataLocally();
-                    await appAlert("Data Restored", "Your data has been successfully restored from Google Sheets.", "success");
-                    location.reload(); 
-                } else { 
-                    await appAlert("Download Failed", result.message, "error");
-                }
-            } catch (error) { 
-                await appAlert("Download Failed", error.message || "Please check your internet connection.", "error");
-            } finally { 
-                if (btnSidebar) {
-                    btnSidebar.innerHTML = origSidebarHTML;
-                    btnSidebar.disabled = false;
-                    btnSidebar.classList.remove('opacity-80', 'cursor-not-allowed');
-                }
-            }
-        }
-
-        function downloadBackup() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(GLOBAL_DATA));
-            const dlNode = document.createElement('a');
-            dlNode.setAttribute("href", dataStr);
-            dlNode.setAttribute("download", "solisystem_backup_" + getLocalDate() + ".json");
-            document.body.appendChild(dlNode); dlNode.click(); dlNode.remove();
-        }
-
-        function restoreBackup(event) {
-            const file = event.target.files[0];
-            if(!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if(Array.isArray(importedData)) { 
-                        GLOBAL_DATA = sanitizeData(importedData); 
-                        saveDataLocally(); 
-                        await appAlert("Backup Restored", "Your local backup file has been successfully loaded.", "success"); 
-                    } else { 
-                        await appAlert("Invalid File", "The file you selected is not a valid backup file.", "error"); 
-                    }
-                } catch(err) { await appAlert("Read Error", "There was an error reading the file.", "error"); }
-            };
-            reader.readAsText(file);
-        }
-
-        async function hardReset() {
-            const confirmed = await appConfirm("Wipe App Data", "DANGER: This will permanently delete ALL data saved on this tablet. Continue?", "Wipe Data", "error");
-            if(confirmed) { localStorage.removeItem(STORE_KEY); location.reload(); }
-        }
-
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-
-        function filterData() {
-            const q = document.getElementById('search-input').value.toLowerCase();
-            const statusFilter = document.getElementById('table-filter-status').value;
-            
-            let activeType = 'solicitation';
-            if(!document.getElementById('table-hearing').classList.contains('hidden')) activeType = 'hearing';
-            else if(!document.getElementById('table-event').classList.contains('hidden')) activeType = 'event';
-            
-            renderTable(activeType, q, statusFilter);
-        }
-
-        function renderTable(type, query = "", statusFilter = "all") {
-            const tbodyId = type === 'solicitation' ? 'tbody-sol' : (type === 'event' ? 'tbody-evt' : 'tbody-hrg');
-            const tbody = document.getElementById(tbodyId); 
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            
-            let filtered = GLOBAL_DATA.filter(e => e.extendedProps && e.extendedProps.type === type);
-            
-            if(query) {
-                filtered = filtered.filter(e => {
-                    const p = e.extendedProps || {};
-                    const searchAddr = p.address || p.town || '';
-                    const text = `${e.title} ${e.id || ''} ${searchAddr}`.toLowerCase();
-                    return text.includes(query);
-                });
-            }
-            if(type === 'solicitation' && statusFilter !== 'all') {
-                filtered = filtered.filter(e => e.extendedProps && e.extendedProps.status === statusFilter);
-            }
-
-            filtered.sort((a,b) => new Date(b.start) - new Date(a.start));
-            if(filtered.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">No records found.</td></tr>`;
-
-            filtered.forEach(e => {
-                const p = e.extendedProps || {};
-                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50 cursor-pointer transition"; tr.onclick = () => openModal(e);
-                
-                if(type === 'solicitation') {
-                    const displayAddr = p.address || [p.brgy, p.town].filter(Boolean).join(', ') || '-';
-                    tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${displayAddr}</td><td class="px-4 py-3"><span class="badge status-${p.status}">${p.status}</span></td><td class="px-4 py-3 text-right font-bold text-slate-700">₱${p.amount||0}</td>`;
-                } else if (type === 'event') {
-                    const timeDisplay = p.time ? `<br><span class="text-[10px] text-slate-400 font-normal">${formatTime(p.time)}</span>` : '';
-                    tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}${timeDisplay}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${p.venue||'-'}</td><td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">${p.description||'-'}</td>`;
-                } else if (type === 'hearing') {
-                    const timeDisplay = p.time ? `<br><span class="text-[10px] text-slate-400 font-normal">${formatTime(p.time)}</span>` : '';
-                    tr.innerHTML = `<td class="px-4 py-3 font-mono font-bold text-slate-500 text-xs">${e.id}</td><td class="px-4 py-3 font-bold text-slate-700 whitespace-nowrap">${formatDate(e.start)}${timeDisplay}</td><td class="px-4 py-3 font-bold text-slate-800">${e.title}</td><td class="px-4 py-3 text-xs text-slate-500">${p.venue||'-'}</td><td class="px-4 py-3 text-xs text-slate-500 truncate max-w-[200px]">${p.description||'-'}</td>`;
-                }
-                tbody.appendChild(tr);
-            });
-        }
-
-        function exportCSV() {
-            let type = 'solicitation';
-            if(!document.getElementById('table-hearing').classList.contains('hidden')) type = 'hearing';
-            else if(!document.getElementById('table-event').classList.contains('hidden')) type = 'event';
-
-            const q = document.getElementById('search-input').value.toLowerCase();
-            const statusFilter = document.getElementById('table-filter-status').value;
-            
-            let filtered = GLOBAL_DATA.filter(e => e.extendedProps && e.extendedProps.type === type);
-            if(q) filtered = filtered.filter(e => (`${e.title} ${e.id} ${e.extendedProps.address || e.extendedProps.town}`).toLowerCase().includes(q));
-            if(type === 'solicitation' && statusFilter !== 'all') filtered = filtered.filter(e => e.extendedProps.status === statusFilter);
-
-            let csv = "";
-            if(type === 'solicitation') csv = "ID,Date,Client,Address,Contact,Status,Amount,DateReleased,ClaimedBy,ReleasedBy\n";
-            else if(type === 'event') csv = "ID,Date,Time,Event Name,Venue,Notes\n";
-            else if(type === 'hearing') csv = "ID,Date,Time,Hearing Title,Venue,Notes\n";
-
-            filtered.forEach(e => {
-                const p = e.extendedProps || {};
-                if(type === 'solicitation') {
-                    const expAddr = p.address || [p.brgy, p.town].filter(Boolean).join(', ') || '';
-                    csv += `${e.id},${e.start},"${e.title}","${expAddr}","${p.contact||''}",${p.status},${p.amount||0},${p.dateGiven||''},"${p.personClaimed||''}","${p.releasedBy||''}"\n`;
-                } else if(type === 'event') {
-                    csv += `${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;
-                } else if(type === 'hearing') {
-                    csv += `${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;
-                }
-            });
-
-            const dlNode = document.createElement('a');
-            dlNode.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(csv));
-            dlNode.setAttribute("download", `solisystem_export_${type}_${getLocalDate()}.csv`);
-            document.body.appendChild(dlNode); dlNode.click(); dlNode.remove();
-        }
-
-        function initCalendar() {
-            const calendarEl = document.getElementById('calendar');
-            if(calendar) calendar.destroy();
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: window.innerWidth < 768 ? 'listWeek' : 'dayGridMonth',
-                headerToolbar: { left: 'prev,next', center: 'title', right: window.innerWidth <768 ? 'today' : 'dayGridMonth,listWeek,today' },
-                height: '100%', events: GLOBAL_DATA,
-                allDayText: '', 
-                eventClassNames: (arg) => { 
-                    const p = arg.event.extendedProps || {}; 
-                    if(p.type === 'solicitation') return ['evt-solicit'];
-                    if(p.type === 'hearing') return ['evt-hearing'];
-                    return ['evt-office']; 
-                },
-                dateClick: (info) => openModal(null, info.dateStr),
-                eventClick: (info) => openModal(info.event)
-            });
-            calendar.render();
-        }
-
-        function toggleRightPanel() {
-            const panel = document.getElementById('right-panel');
-            panel.classList.toggle('hidden');
-            setTimeout(() => { if(calendar) calendar.render(); }, 300);
-        }
-        
-        function switchMode(mode) {
-            document.getElementById('entry-type').value = mode; 
-            const isSol = mode === 'solicitation';
-            const isEvt = mode === 'event';
-            const isHrg = mode === 'hearing';
-            
-            const toggle = (id, show) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden', !show); }
-            
-            toggle('group-desc-sol', isSol); 
-            toggle('group-address', isSol); 
-            toggle('group-contact', isSol); 
-            toggle('btn-print', isSol);
-            
-            toggle('group-desc-evt', isEvt || isHrg); 
-            toggle('field-venue', isEvt || isHrg); 
-            
-            const wrapper = document.getElementById('processing-wrapper');
-            const isNew = !document.getElementById('entry-id').value;
-            if(isSol) {
-                wrapper.classList.remove('hidden');
-                if(isNew) { document.getElementById('processing-fields').classList.add('hidden'); document.getElementById('btn-show-processing').classList.remove('hidden'); }
-                else { document.getElementById('processing-fields').classList.remove('hidden'); document.getElementById('btn-show-processing').classList.add('hidden'); }
-            } else { wrapper.classList.add('hidden'); }
-
-            document.getElementById('label-title').innerText = isSol ? "Name of Solicitor" : (isEvt ? "Event Name" : "Hearing Title");
-            document.getElementById('label-evt-desc').innerText = isHrg ? "Notes / Description" : "Event Note";
-
-            document.getElementById('btn-solicitation').className = isSol ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
-            document.getElementById('btn-event').className = isEvt ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
-            document.getElementById('btn-hearing').className = isHrg ? "px-3 py-1 rounded-md text-xs font-bold shadow-sm bg-white text-slate-800 transition" : "px-3 py-1 rounded-md text-xs font-bold text-slate-500 bg-transparent hover:text-slate-700 transition";
-        }
-
-        function revealProcessing() {
-            document.getElementById('processing-fields').classList.remove('hidden');
-            document.getElementById('btn-show-processing').classList.add('hidden');
-        }
-
-        function openModal(event = null, dateStr = null) {
-            document.getElementById('main-form').reset();
-            const delBtn = document.getElementById('btn-delete'); const printBtn = document.getElementById('btn-print');
-            
-            let dVal = dateStr || getLocalDate();
-
-            if (event) {
-                const p = event.extendedProps || {};
-                
-                dVal = cleanDate(event.startStr || event.start || dVal);
-
-                document.getElementById('modal-title-text').innerText = "Edit " + event.id;
-                document.getElementById('entry-id').value = event.id;
-                document.getElementById('title').value = event.title;
-                document.getElementById('date').value = dVal;
-                
-                switchMode(p.type || 'solicitation');
-                if(p.type === 'solicitation') {
-                    document.getElementById('description').value = p.description || '';
-                    document.getElementById('time').value = p.time ? cleanTime(p.time) : '';
-                    
-                    let loadedAddr = p.address || "";
-                    if (!loadedAddr && (p.town || p.brgy)) {
-                        loadedAddr = [p.brgy, p.town].filter(Boolean).join(', ');
-                    }
-                    if(document.getElementById('address')) document.getElementById('address').value = loadedAddr;
-                    
-                    document.getElementById('status').value = p.status || 'pending';
-                    document.getElementById('amount').value = p.amount || '';
-                    document.getElementById('contact').value = p.contact || '';
-                    document.getElementById('person-claimed').value = p.personClaimed || '';
-                    document.getElementById('date-given').value = cleanDate(p.dateGiven);
-                    document.getElementById('released-by').value = p.releasedBy || ''; 
-                    toggleAuditFields(); printBtn.classList.remove('hidden');
-                } else if(p.type === 'event') {
-                    document.getElementById('evt-description').value = p.description || '';
-                    document.getElementById('venue').value = p.venue || '';
-                    if(p.time) document.getElementById('time').value = cleanTime(p.time);
-                    printBtn.classList.add('hidden');
-                } else if(p.type === 'hearing') {
-                    document.getElementById('evt-description').value = p.description || '';
-                    document.getElementById('venue').value = p.venue || '';
-                    if(p.time) document.getElementById('time').value = cleanTime(p.time);
-                    printBtn.classList.add('hidden');
-                }
-                delBtn.classList.remove('hidden');
+        // ── TEST MODE FEEDBACK ──
+        if (forceRun) {
+            const total = tmrEvents.length + todayEvents.length;
+            if (total === 0) {
+                await appAlert(
+                    "No Events Found",
+                    "No events or hearings are scheduled for today or tomorrow.",
+                    "info"
+                );
             } else {
-                document.getElementById('modal-title-text').innerText = "New Record";
-                document.getElementById('entry-id').value = "";
-                document.getElementById('date').value = dVal;
-                document.getElementById('time').value = getLocalTime();
-                
-                let defaultMode = 'solicitation';
-                if(!document.getElementById('table-hearing').classList.contains('hidden')) defaultMode = 'hearing';
-                else if(!document.getElementById('table-event').classList.contains('hidden')) defaultMode = 'event';
-                
-                switchMode(defaultMode);
-                if(document.getElementById('address')) document.getElementById('address').value = "";
-                toggleAuditFields(); delBtn.classList.add('hidden'); printBtn.classList.add('hidden');
+                // Build a readable summary of what would fire and when
+                let summary = '';
+                todayEvents.forEach(e => {
+                    const p      = e.extendedProps || {};
+                    const evtT   = parseEventTime(p.time);
+                    const fireT  = oneHourBefore(evtT.hh, evtT.mm);
+                    const icon   = p.type === 'hearing' ? '⚖️' : '📅';
+                    const when   = p.time ? `fires at ${fireT.hh}:${String(fireT.mm).padStart(2,'0')}` : 'fires at 08:00 (no time set)';
+                    summary += `${icon} TODAY — ${e.title}
+   ↳ ${when}
+`;
+                });
+                tmrEvents.forEach(e => {
+                    const p     = e.extendedProps || {};
+                    const evtT  = parseEventTime(p.time);
+                    const icon  = p.type === 'hearing' ? '⚖️' : '📅';
+                    const when  = p.time ? `fires at ${evtT.hh}:${String(evtT.mm).padStart(2,'0')} today` : 'fires at 08:00 today (no time set)';
+                    summary += `${icon} TOMORROW — ${e.title}
+   ↳ ${when}
+`;
+                });
+                await appAlert(
+                    `Test: ${total} schedule(s) found 🔔`,
+                    summary.trim(),
+                    "success"
+                );
             }
-            document.getElementById('entry-modal').classList.remove('hidden');
         }
+    }
 
-        function toggleAuditFields() {
-            const s = document.getElementById('status').value;
-            const div = document.getElementById('audit-section');
-            if(s === 'done') {
-                div.classList.remove('hidden');
-                if(!document.getElementById('date-given').value) document.getElementById('date-given').value = getLocalDate();
-                if(!document.getElementById('person-claimed').value) document.getElementById('person-claimed').value = document.getElementById('title').value;
-            } else { div.classList.add('hidden'); }
+    // ── TEST BUTTON ──
+    async function testNotifications() {
+        if (!('Notification' in window)) {
+            await appAlert("Not Supported", "Your browser does not support notifications.", "warning");
+            return;
         }
-
-        function printVoucher() {
-            const p = GLOBAL_DATA.find(x => x.id == document.getElementById('entry-id').value);
-            document.getElementById('p-date').innerText = formatDate(document.getElementById('date').value);
-            document.getElementById('p-control').innerText = p ? p.id : "NEW";
-            document.getElementById('p-name').innerText = document.getElementById('title').value;
-            
-            const printAddr = document.getElementById('address') ? document.getElementById('address').value : '';
-            document.getElementById('p-address').innerText = printAddr;
-            
-            document.getElementById('p-amount').innerText = document.getElementById('amount').value;
-            document.getElementById('p-desc').innerText = document.getElementById('description').value;
-            document.getElementById('p-claimed-by').innerText = document.getElementById('person-claimed').value;
-            
-            const dateGivenVal = document.getElementById('date-given').value;
-            document.getElementById('p-date-given').innerText = dateGivenVal ? formatDate(dateGivenVal) : "";
-            
-            document.getElementById('p-released-by').innerText = document.getElementById('released-by').value;
-            window.print();
+        if (Notification.permission !== 'granted') {
+            const ok = await appConfirm(
+                "Enable Notifications First",
+                "Push notifications are not enabled. Enable them now to test?",
+                "Enable", "info"
+            );
+            if (ok) await requestNotifPermission();
+            return;
         }
+        await runNotificationCheck(true);
+    }
 
-        function closeModal() { document.getElementById('entry-modal').classList.add('hidden'); }
-        
-        function switchView(v) { 
-            const c = document.getElementById('view-calendar'); const t = document.getElementById('view-table'); 
-            const btnC = document.getElementById('view-calendar-btn'); const btnT = document.getElementById('view-table-btn');
-            if(v === 'calendar'){ c.classList.remove('hidden'); t.classList.add('hidden'); btnC.className = "btn-toggle-view btn-active"; btnT.className = "btn-toggle-view btn-inactive"; calendar.render(); } 
-            else { c.classList.add('hidden'); t.classList.remove('hidden'); btnC.className = "btn-toggle-view btn-inactive"; btnT.className = "btn-toggle-view btn-active"; filterData(); } 
-        }
-        
-        function switchTableTab(t) { 
-            document.getElementById('table-solicitation').classList.toggle('hidden', t !== 'solicitation');
-            document.getElementById('table-event').classList.toggle('hidden', t !== 'event');
-            document.getElementById('table-hearing').classList.toggle('hidden', t !== 'hearing');
-            document.getElementById('table-filter-status').classList.toggle('hidden', t !== 'solicitation'); 
-            
-            const tabs = ['sol', 'evt', 'hrg'];
-            tabs.forEach(tab => {
-                const btn = document.getElementById(`tab-${tab}`);
-                if(btn) {
-                    if((t === 'solicitation' && tab === 'sol') || (t === 'event' && tab === 'evt') || (t === 'hearing' && tab === 'hrg')) {
-                        btn.className = "px-4 py-3 text-sm font-bold border-b-2 border-slate-900 text-slate-900 transition";
-                    } else {
-                        btn.className = "px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition";
-                    }
-                }
-            });
-            filterData();
-        }
-        
-        function renderSidebar() {
-            const list = document.getElementById('upcoming-list'); list.innerHTML = '';
-            const todayStr = getLocalDate();
-            
-            const upcomingEvents = GLOBAL_DATA.filter(e => e.start >= todayStr && e.extendedProps && (e.extendedProps.type === 'event' || e.extendedProps.type === 'hearing')).sort((a,b) => new Date(a.start) - new Date(b.start));
+    // ── SCHEDULER — checks every 60 seconds ──
+    function startNotificationScheduler() {
+        setInterval(() => runNotificationCheck(false), 60 * 1000);
+    }
 
-            if(upcomingEvents.length === 0) { list.innerHTML = '<p class="text-xs text-slate-400 text-center italic mt-4">No upcoming events or hearings.</p>'; return; }
 
-            upcomingEvents.slice(0, 8).forEach(e => {
-                const diffTime = Math.abs(new Date(e.start) - new Date(todayStr));
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                const p = e.extendedProps || {};
-                
-                let borderColor = 'border-slate-300';
-                let alertIcon = '';
-                let typeBadge = '';
-                
-                if(p.type === 'hearing') {
-                    typeBadge = '<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[8px] font-bold ml-1 align-middle">HEARING</span>';
-                }
 
-                if(diffDays <= 1) { borderColor = 'border-red-500'; alertIcon = '<i class="fa-solid fa-circle-exclamation text-red-500 float-right"></i>'; }
-                else if (diffDays === 2) { borderColor = 'border-amber-400'; alertIcon = '<i class="fa-solid fa-triangle-exclamation text-amber-500 float-right"></i>'; }
-                else { borderColor = p.type === 'hearing' ? 'border-green-400' : 'border-blue-400'; }
-
-                const venueHtml = p.venue ? `<div class="text-[10px] text-slate-500 mt-1 truncate"><i class="fa-solid fa-location-dot mr-1"></i>${p.venue}</div>` : '';
-                const timeDisplay = p.time ? formatTime(p.time) + ' • ' : '';
-                
-                list.innerHTML += `
-                    <div class="border-l-4 ${borderColor} pl-3 py-2 bg-white rounded shadow-sm border-y border-r border-slate-100 pr-3 cursor-pointer hover:bg-slate-50" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))">
-                        <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">${timeDisplay}${formatDate(e.start)} ${alertIcon}</div>
-                        <div class="font-bold text-xs text-slate-800 leading-snug">${e.title} ${typeBadge}</div>
-                        ${venueHtml}
-                    </div>
-                `;
-            });
-        }
-    </script>
+</script>
 </body>
 </html>
