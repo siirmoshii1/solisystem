@@ -497,7 +497,28 @@
                     <button class="tab-btn" id="tab-evt" onclick="switchTableTab('event')"><i class="fa-solid fa-calendar-star"></i> Events <span class="tab-count" id="cnt-evt">0</span></button>
                     <button class="tab-btn" id="tab-hrg" onclick="switchTableTab('hearing')"><i class="fa-solid fa-gavel"></i> Hearings <span class="tab-count" id="cnt-hrg">0</span></button>
                 </div>
-                <button class="fbtn fbtn-ghost" style="font-size:11px;padding:6px 10px;margin-bottom:10px;flex-shrink:0;margin-left:6px" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> CSV</button>
+                <!-- Month + Year filter -->
+                <div style="display:flex;align-items:center;gap:6px;padding-bottom:10px;flex-shrink:0;margin-left:8px">
+                    <select id="filter-month" class="filter-sel" onchange="filterData()" style="font-size:11px;padding:6px 22px 6px 8px">
+                        <option value="all">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="filter-year" class="filter-sel" onchange="filterData()" style="font-size:11px;padding:6px 22px 6px 8px">
+                        <option value="all">All Years</option>
+                    </select>
+                    <button class="fbtn fbtn-ghost" style="font-size:11px;padding:6px 10px;flex-shrink:0;border:1px solid #e2e8f0" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                </div>
             </div>
             <div class="tbl-scroll">
                 <div id="table-solicitation">
@@ -809,6 +830,36 @@
     function syncFilters(src){const other=document.getElementById(src.id==='filter-status-m'?'filter-status-d':'filter-status-m');if(other)other.value=src.value;filterData();}
     function getQuery(){const m=document.getElementById('search-m');return m?m.value.toLowerCase():'';}
     function getFilter(){const m=document.getElementById('filter-status-m');return m?m.value:'all';}
+    function getMonthFilter(){const m=document.getElementById('filter-month');return m?m.value:'all';}
+    function getYearFilter(){const m=document.getElementById('filter-year');return m?m.value:'all';}
+
+    // ── Populate year dropdown from actual data ──
+    function populateYearFilter() {
+        const sel = document.getElementById('filter-year');
+        if (!sel) return;
+        const years = [...new Set(
+            GLOBAL_DATA
+                .map(e => e.start ? e.start.substring(0,4) : null)
+                .filter(Boolean)
+        )].sort((a,b) => b - a); // descending
+        // Keep "All Years" option, rebuild the rest
+        sel.innerHTML = '<option value="all">All Years</option>';
+        years.forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = y;
+            opt.textContent = y;
+            sel.appendChild(opt);
+        });
+        // Auto-select current year
+        const currentYear = String(new Date().getFullYear());
+        if (years.includes(currentYear)) sel.value = currentYear;
+    }
+
+    // ── Auto-select current month ──
+    function setCurrentMonth() {
+        const sel = document.getElementById('filter-month');
+        if (sel) sel.value = String(new Date().getMonth() + 1);
+    }
     function syncViewBtns(v){['vcal-m','vcal-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',v==='calendar');});['vtbl-m','vtbl-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',v==='table');});}
 
     // ── INIT ──
@@ -822,7 +873,9 @@
         initCalendar();
         renderSchedulePanel();
         updateCounts();
-        renderTable('solicitation');
+        populateYearFilter();
+        setCurrentMonth();
+        renderTable('solicitation', '', 'all', getMonthFilter(), getYearFilter());
         startNotificationScheduler();
 
         if (!sessionStorage.getItem('dashboard_seen')) {
@@ -860,7 +913,7 @@
         // Full reinit needed so eventContent (status badges) re-renders correctly
         initCalendar();
         renderSchedulePanel();
-        renderTable(getActiveType(), getQuery(), getFilter());
+        renderTable(getActiveType(), getQuery(), getFilter(), getMonthFilter(), getYearFilter());
     }
     function getActiveType(){if(document.getElementById('table-hearing').style.display!=='none')return'hearing';if(document.getElementById('table-event').style.display!=='none')return'event';return'solicitation';}
     function updateCounts(){const c={solicitation:0,event:0,hearing:0};GLOBAL_DATA.forEach(e=>{const t=e.extendedProps?.type;if(c[t]!==undefined)c[t]++;});document.getElementById('cnt-sol').innerText=c.solicitation;document.getElementById('cnt-evt').innerText=c.event;document.getElementById('cnt-hrg').innerText=c.hearing;}
@@ -919,9 +972,9 @@
         catch{await appAlert("Connection Error","Check internet and try again.","error");}
         finally{btns.forEach((b,i)=>{b.innerHTML=origs[i];b.disabled=false;});}
     }
-    async function downloadFromCloud(){const ok=await appConfirm("Restore from Cloud","This will overwrite your local data.","Overwrite","warning");if(!ok)return;const btn=document.getElementById('btn-download');const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';btn.disabled=true;try{const url=API_URL+(API_URL.includes('?')?'&':'?')+'action=download&t='+Date.now();const res=await fetch(url,{method:'GET'});if(!res.ok)throw new Error("Network error.");const result=JSON.parse(await res.text());if(result.result==="success"){GLOBAL_DATA=sanitizeData(result.data);saveDataLocally();await appAlert("Restored","Data restored from cloud.","success");location.reload();}else await appAlert("Failed",result.message,"error");}catch(e){await appAlert("Failed",e.message,"error");}finally{btn.innerHTML=orig;btn.disabled=false;}}
+    async function downloadFromCloud(){const ok=await appConfirm("Restore from Cloud","This will overwrite your local data.","Overwrite","warning");if(!ok)return;const btn=document.getElementById('btn-download');const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';btn.disabled=true;try{const url=API_URL+(API_URL.includes('?')?'&':'?')+'action=download&t='+Date.now();const res=await fetch(url,{method:'GET'});if(!res.ok)throw new Error("Network error.");const result=JSON.parse(await res.text());if(result.result==="success"){GLOBAL_DATA=sanitizeData(result.data);saveDataLocally();populateYearFilter();await appAlert("Restored","Data restored from cloud.","success");location.reload();}else await appAlert("Failed",result.message,"error");}catch(e){await appAlert("Failed",e.message,"error");}finally{btn.innerHTML=orig;btn.disabled=false;}}
     function downloadBackup(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(GLOBAL_DATA));a.download="solisystem_backup_"+getLocalDate()+".json";document.body.appendChild(a);a.click();a.remove();}
-    function restoreBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){GLOBAL_DATA=sanitizeData(d);saveDataLocally();await appAlert("Restored","Backup loaded.","success");}else await appAlert("Invalid File","Not a valid backup.","error");}catch{await appAlert("Error","Could not read file.","error");}};r.readAsText(file);}
+    function restoreBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){GLOBAL_DATA=sanitizeData(d);saveDataLocally();populateYearFilter();await appAlert("Restored","Backup loaded.","success");}else await appAlert("Invalid File","Not a valid backup.","error");}catch{await appAlert("Error","Could not read file.","error");}};r.readAsText(file);}
     async function hardReset(){const ok=await appConfirm("Wipe Data","Delete ALL local data permanently?","Wipe","error");if(ok){localStorage.removeItem(STORE_KEY);location.reload();}}
 
     // ── SIDEBAR ──
@@ -931,15 +984,25 @@
     // ── VIEWS ──
     function switchView(v){const cal=document.getElementById('view-calendar'),tbl=document.getElementById('view-table');if(v==='calendar'){cal.style.display='';tbl.style.display='none';setTimeout(()=>calendar&&calendar.render(),50);}else{cal.style.display='none';tbl.style.display='flex';filterData();}syncViewBtns(v);}
     function switchTableTab(type){['solicitation','event','hearing'].forEach(t=>{document.getElementById(`table-${t}`).style.display=t===type?'block':'none';const map={solicitation:'sol',event:'evt',hearing:'hrg'};document.getElementById(`tab-${map[t]}`).classList.toggle('active',t===type);});['filter-status-m','filter-status-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=type==='solicitation'?'':'none';});filterData();}
-    function filterData(){renderTable(getActiveType(),getQuery(),getFilter());}
+    function filterData(){renderTable(getActiveType(),getQuery(),getFilter(),getMonthFilter(),getYearFilter());}
 
     // ── TABLE RENDER ──
-    function renderTable(type,query="",statusFilter="all"){
+    function renderTable(type,query="",statusFilter="all",monthFilter="all",yearFilter="all"){
         const map={solicitation:'tbody-sol',event:'tbody-evt',hearing:'tbody-hrg'};
         const tbody=document.getElementById(map[type]);if(!tbody)return;tbody.innerHTML='';
         let data=GLOBAL_DATA.filter(e=>e.extendedProps?.type===type);
         if(query)data=data.filter(e=>`${e.title} ${e.id} ${e.extendedProps?.address||e.extendedProps?.town||''}`.toLowerCase().includes(query));
         if(type==='solicitation'&&statusFilter!=='all')data=data.filter(e=>e.extendedProps?.status===statusFilter);
+        // Month filter
+        if(monthFilter!=='all')data=data.filter(e=>{
+            if(!e.start)return false;
+            return String(parseInt(e.start.substring(5,7),10))===monthFilter;
+        });
+        // Year filter
+        if(yearFilter!=='all')data=data.filter(e=>{
+            if(!e.start)return false;
+            return e.start.substring(0,4)===yearFilter;
+        });
         data.sort((a,b)=>new Date(b.start)-new Date(a.start));
         if(!data.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>No records found.</p></div></td></tr>`;return;}
         data.forEach(e=>{
@@ -951,7 +1014,24 @@
     }
 
     // ── CSV ──
-    function exportCSV(){const type=getActiveType(),q=getQuery(),sf=getFilter();let data=GLOBAL_DATA.filter(e=>e.extendedProps?.type===type);if(q)data=data.filter(e=>`${e.title} ${e.id} ${e.extendedProps?.address||''}`.toLowerCase().includes(q));if(type==='solicitation'&&sf!=='all')data=data.filter(e=>e.extendedProps?.status===sf);let csv=type==='solicitation'?"ID,Date,Name,Description,Address,Contact,Status,Amount,DateReceived,ClaimedBy,ReleasedBy\n":"ID,Date,Time,Title,Venue,Notes\n";data.forEach(e=>{const p=e.extendedProps||{};if(type==='solicitation'){const addr=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';csv+=`${e.id},${e.start},"${e.title}","${p.description||''}","${addr}","${p.contact||''}",${p.status},${p.amount||0},${p.dateGiven||''},"${p.personClaimed||''}","${p.releasedBy||''}"\n`;}else{csv+=`${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;}});const a=document.createElement('a');a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download=`solisystem_${type}_${getLocalDate()}.csv`;document.body.appendChild(a);a.click();a.remove();}
+    function exportCSV(){
+        const type=getActiveType(),q=getQuery(),sf=getFilter(),mf=getMonthFilter(),yf=getYearFilter();
+        let data=GLOBAL_DATA.filter(e=>e.extendedProps?.type===type);
+        if(q)data=data.filter(e=>`${e.title} ${e.id} ${e.extendedProps?.address||''}`.toLowerCase().includes(q));
+        if(type==='solicitation'&&sf!=='all')data=data.filter(e=>e.extendedProps?.status===sf);
+        if(mf!=='all')data=data.filter(e=>e.start&&String(parseInt(e.start.substring(5,7),10))===mf);
+        if(yf!=='all')data=data.filter(e=>e.start&&e.start.substring(0,4)===yf);
+        data.sort((a,b)=>new Date(a.start)-new Date(b.start));
+        let csv=type==='solicitation'?"ID,Date,Name,Description,Address,Contact,Status,Amount,DateReceived,ClaimedBy,ReleasedBy\n":"ID,Date,Time,Title,Venue,Notes\n";
+        data.forEach(e=>{const p=e.extendedProps||{};if(type==='solicitation'){const addr=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';csv+=`${e.id},${e.start},"${e.title}","${p.description||''}","${addr}","${p.contact||''}",${p.status},${p.amount||0},${p.dateGiven||''},"${p.personClaimed||''}","${p.releasedBy||''}"
+`;}else{csv+=`${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"
+`;}});
+        const mn=['','January','February','March','April','May','June','July','August','September','October','November','December'];
+        const mLabel=mf!=='all'?'_'+mn[parseInt(mf)]:'';
+        const yLabel=yf!=='all'?'_'+yf:'';
+        const fname=`solisystem_${type}${mLabel}${yLabel||'_'+getLocalDate()}.csv`;
+        const a=document.createElement('a');a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download=fname;document.body.appendChild(a);a.click();a.remove();
+    }
 
     // ── CALENDAR ──
     function initCalendar() {
