@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOLISYSTEM (V30)</title>
+    <title>SOLISYSTEM - Office 2 (V3)</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
 
@@ -760,6 +760,89 @@
     </div>
 </div>
 
+<!-- RESTORE PREVIEW MODAL -->
+<div id="restore-modal" class="modal-wrap">
+    <div class="modal-box" style="max-width:420px">
+        <div class="modal-handle"></div>
+        <div class="modal-head">
+            <span class="modal-title"><i class="fa-solid fa-cloud-arrow-down" style="color:#16a34a;margin-right:8px"></i>Restore from Cloud</span>
+            <button class="modal-close" onclick="hideModal('restore-modal')"><i class="fa-solid fa-times"></i></button>
+        </div>
+
+        <!-- Loading state -->
+        <div id="restore-loading" class="modal-body" style="text-align:center;padding:40px 20px">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size:28px;color:#94a3b8;display:block;margin-bottom:12px"></i>
+            <p style="font-size:13px;color:#64748b;font-weight:600">Fetching data from cloud...</p>
+        </div>
+
+        <!-- Preview state (hidden until data loads) -->
+        <div id="restore-preview" style="display:none">
+            <div class="modal-body" style="padding:20px">
+                <p style="font-size:12px;color:#64748b;margin-bottom:14px">
+                    Select which records to restore. <b style="color:#ef4444">Existing local records of the same type will be replaced.</b>
+                </p>
+
+                <label style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px" id="rs-sol-row">
+                    <input type="checkbox" id="rs-sol" checked onchange="onRestoreCheckChange()" style="width:17px;height:17px;accent-color:#0f172a;cursor:pointer">
+                    <div style="flex:1">
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:7px">
+                            <i class="fa-solid fa-hand-holding-heart" style="color:#f59e0b"></i> Solicitations
+                        </div>
+                        <div id="rs-sol-count" style="font-size:11px;color:#94a3b8;margin-top:2px">— records in cloud</div>
+                    </div>
+                    <div style="text-align:right;font-size:10.5px;color:#64748b" id="rs-sol-local"></div>
+                </label>
+
+                <label style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px" id="rs-evt-row">
+                    <input type="checkbox" id="rs-evt" checked onchange="onRestoreCheckChange()" style="width:17px;height:17px;accent-color:#0f172a;cursor:pointer">
+                    <div style="flex:1">
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:7px">
+                            <i class="fa-solid fa-calendar-star" style="color:#3b82f6"></i> Events
+                        </div>
+                        <div id="rs-evt-count" style="font-size:11px;color:#94a3b8;margin-top:2px">— records in cloud</div>
+                    </div>
+                    <div style="text-align:right;font-size:10.5px;color:#64748b" id="rs-evt-local"></div>
+                </label>
+
+                <label style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:0" id="rs-hrg-row">
+                    <input type="checkbox" id="rs-hrg" checked onchange="onRestoreCheckChange()" style="width:17px;height:17px;accent-color:#0f172a;cursor:pointer">
+                    <div style="flex:1">
+                        <div style="font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:7px">
+                            <i class="fa-solid fa-gavel" style="color:#22c55e"></i> Hearings
+                        </div>
+                        <div id="rs-hrg-count" style="font-size:11px;color:#94a3b8;margin-top:2px">— records in cloud</div>
+                    </div>
+                    <div style="text-align:right;font-size:10.5px;color:#64748b" id="rs-hrg-local"></div>
+                </label>
+
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+                    <button type="button" onclick="toggleAllRestore()" id="rs-toggle-all" style="font-size:11.5px;font-weight:700;color:#475569;background:none;border:none;cursor:pointer;padding:0;font-family:inherit">
+                        <i class="fa-solid fa-check-double"></i> Select All
+                    </button>
+                    <span id="rs-total-count" style="font-size:11px;color:#94a3b8;font-weight:600">0 records will be restored</span>
+                </div>
+            </div>
+            <div class="modal-foot" style="justify-content:flex-end;gap:8px">
+                <button class="fbtn fbtn-ghost" onclick="hideModal('restore-modal')">Cancel</button>
+                <button class="fbtn fbtn-primary" id="rs-confirm-btn" onclick="confirmRestore()" style="background:#16a34a">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Restore Selected
+                </button>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="restore-error" style="display:none" class="modal-body">
+            <div style="text-align:center;padding:20px 0">
+                <i class="fa-solid fa-circle-xmark" style="font-size:28px;color:#ef4444;display:block;margin-bottom:10px"></i>
+                <p id="restore-error-msg" style="font-size:13px;color:#64748b"></p>
+            </div>
+            <div class="modal-foot" style="justify-content:flex-end">
+                <button class="fbtn fbtn-ghost" onclick="hideModal('restore-modal')">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- PRINT AREA -->
 <div id="print-area">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:14px">
@@ -1119,7 +1202,135 @@ Types: ${typeLabels}`,
             btns.forEach((b, i) => { b.innerHTML = origs[i]; b.disabled = false; });
         }
     }
-    async function downloadFromCloud(){const ok=await appConfirm("Restore from Cloud","This will overwrite your local data.","Overwrite","warning");if(!ok)return;const btn=document.getElementById('btn-download');const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';btn.disabled=true;try{const url=API_URL+(API_URL.includes('?')?'&':'?')+'action=download&t='+Date.now();const res=await fetch(url,{method:'GET'});if(!res.ok)throw new Error("Network error.");const result=JSON.parse(await res.text());if(result.result==="success"){GLOBAL_DATA=sanitizeData(result.data);saveDataLocally();populateYearFilter();await appAlert("Restored","Data restored from cloud.","success");location.reload();}else await appAlert("Failed",result.message,"error");}catch(e){await appAlert("Failed",e.message,"error");}finally{btn.innerHTML=orig;btn.disabled=false;}}
+    // ── RESTORE FROM CLOUD — Step 1: Fetch & Preview ──
+    let _cloudData = []; // holds fetched cloud data temporarily
+
+    async function downloadFromCloud() {
+        // Show modal in loading state
+        document.getElementById('restore-loading').style.display = '';
+        document.getElementById('restore-preview').style.display = 'none';
+        document.getElementById('restore-error').style.display   = 'none';
+        showModal('restore-modal');
+
+        // Disable the restore button while fetching
+        const btn = document.getElementById('btn-download');
+        const orig = btn ? btn.innerHTML : '';
+        if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; }
+
+        try {
+            const url = API_URL + (API_URL.includes('?') ? '&' : '?') + 'action=download&t=' + Date.now();
+            const res = await fetch(url, { method: 'GET' });
+            if (!res.ok) throw new Error("Network error. Check your connection.");
+            const result = JSON.parse(await res.text());
+
+            if (result.result !== "success") throw new Error(result.message || "Unknown error.");
+
+            // Store fetched data
+            _cloudData = sanitizeData(result.data);
+
+            // Count per type in cloud
+            const cloud = { solicitation:0, event:0, hearing:0 };
+            _cloudData.forEach(e => { const t = e.extendedProps?.type; if (cloud[t] !== undefined) cloud[t]++; });
+
+            // Count per type locally
+            const local = { solicitation:0, event:0, hearing:0 };
+            GLOBAL_DATA.forEach(e => { const t = e.extendedProps?.type; if (local[t] !== undefined) local[t]++; });
+
+            // Populate modal
+            const s = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+            s('rs-sol-count', cloud.solicitation + ' record' + (cloud.solicitation !== 1 ? 's' : '') + ' in cloud');
+            s('rs-evt-count', cloud.event        + ' record' + (cloud.event        !== 1 ? 's' : '') + ' in cloud');
+            s('rs-hrg-count', cloud.hearing      + ' record' + (cloud.hearing      !== 1 ? 's' : '') + ' in cloud');
+            s('rs-sol-local', local.solicitation + ' local');
+            s('rs-evt-local', local.event        + ' local');
+            s('rs-hrg-local', local.hearing      + ' local');
+
+            // Disable checkbox if cloud has 0 of that type
+            const setSolCb = document.getElementById('rs-sol');
+            const setEvtCb = document.getElementById('rs-evt');
+            const setHrgCb = document.getElementById('rs-hrg');
+            if (setSolCb) { setSolCb.disabled = cloud.solicitation === 0; setSolCb.checked = cloud.solicitation > 0; }
+            if (setEvtCb) { setEvtCb.disabled = cloud.event        === 0; setEvtCb.checked = cloud.event        > 0; }
+            if (setHrgCb) { setHrgCb.disabled = cloud.hearing      === 0; setHrgCb.checked = cloud.hearing      > 0; }
+
+            onRestoreCheckChange();
+
+            // Show preview
+            document.getElementById('restore-loading').style.display = 'none';
+            document.getElementById('restore-preview').style.display = '';
+
+        } catch (e) {
+            document.getElementById('restore-loading').style.display  = 'none';
+            document.getElementById('restore-error').style.display    = '';
+            const errEl = document.getElementById('restore-error-msg');
+            if (errEl) errEl.innerText = e.message || "Failed to fetch data from cloud.";
+        } finally {
+            if (btn) { btn.innerHTML = orig; btn.disabled = false; }
+        }
+    }
+
+    function onRestoreCheckChange() {
+        const sol = document.getElementById('rs-sol')?.checked;
+        const evt = document.getElementById('rs-evt')?.checked;
+        const hrg = document.getElementById('rs-hrg')?.checked;
+        const types = [];
+        if (sol) types.push('solicitation');
+        if (evt) types.push('event');
+        if (hrg) types.push('hearing');
+        const total = _cloudData.filter(e => types.includes(e.extendedProps?.type)).length;
+        const el = document.getElementById('rs-total-count');
+        if (el) el.innerText = total + ' record' + (total !== 1 ? 's' : '') + ' will be restored';
+        const btn = document.getElementById('rs-confirm-btn');
+        if (btn) btn.disabled = types.length === 0;
+        // Toggle-all label
+        const allChecked = sol && evt && hrg;
+        const toggleBtn = document.getElementById('rs-toggle-all');
+        if (toggleBtn) toggleBtn.innerHTML = allChecked
+            ? '<i class="fa-solid fa-square-minus"></i> Deselect All'
+            : '<i class="fa-solid fa-check-double"></i> Select All';
+    }
+
+    function toggleAllRestore() {
+        const cbs = ['rs-sol','rs-evt','rs-hrg'].map(id => document.getElementById(id)).filter(cb => cb && !cb.disabled);
+        const allChecked = cbs.every(cb => cb.checked);
+        cbs.forEach(cb => { cb.checked = !allChecked; });
+        onRestoreCheckChange();
+    }
+
+    // ── RESTORE — Step 2: Confirm & Apply ──
+    async function confirmRestore() {
+        const sol = document.getElementById('rs-sol')?.checked;
+        const evt = document.getElementById('rs-evt')?.checked;
+        const hrg = document.getElementById('rs-hrg')?.checked;
+        const selectedTypes = [];
+        if (sol) selectedTypes.push('solicitation');
+        if (evt) selectedTypes.push('event');
+        if (hrg) selectedTypes.push('hearing');
+
+        if (selectedTypes.length === 0) {
+            await appAlert("Nothing Selected", "Please select at least one type to restore.", "warning");
+            return;
+        }
+
+        hideModal('restore-modal');
+
+        // Keep local records NOT in the selected types, replace selected types with cloud data
+        const kept    = GLOBAL_DATA.filter(e => !selectedTypes.includes(e.extendedProps?.type));
+        const restored = _cloudData.filter(e =>  selectedTypes.includes(e.extendedProps?.type));
+        GLOBAL_DATA = [...kept, ...restored];
+
+        saveDataLocally();
+        populateYearFilter();
+        _cloudData = []; // clear temp
+
+        const typeLabels = selectedTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1) + 's').join(', ');
+        await appAlert(
+            "Restore Complete! ✅",
+            `${restored.length} record(s) restored from cloud.
+Types: ${typeLabels}`,
+            "success"
+        );
+    }
     function downloadBackup(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(GLOBAL_DATA));a.download="solisystem_backup_"+getLocalDate()+".json";document.body.appendChild(a);a.click();a.remove();}
     function restoreBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){GLOBAL_DATA=sanitizeData(d);saveDataLocally();populateYearFilter();await appAlert("Restored","Backup loaded.","success");}else await appAlert("Invalid File","Not a valid backup.","error");}catch{await appAlert("Error","Could not read file.","error");}};r.readAsText(file);}
     async function hardReset(){const ok=await appConfirm("Wipe Data","Delete ALL local data permanently?","Wipe","error");if(ok){localStorage.removeItem(STORE_KEY);location.reload();}}
