@@ -153,23 +153,46 @@
         /* Custom event content wrapper */
         .fc-event-custom { display: flex; align-items: center; gap: 4px; width: 100%; overflow: hidden; padding: 1px 2px; }
         .fc-event-custom .ev-title { font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
-        .fc-event-custom .ev-badge {
-            width: 14px; height: 14px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8px; flex-shrink: 0; font-weight: 900;
+        /* FA icon badge for solicitation status */
+        .ev-fa-badge {
+            font-size: 11px;
+            flex-shrink: 0;
+            width: 14px;
+            text-align: center;
         }
-        .ev-badge-done     { background: #16a34a; color: #fff; }
-        .ev-badge-declined { background: #ef4444; color: #fff; }
-        .ev-badge-pending  { background: #f59e0b; color: #fff; }
+        .ev-fa-badge.ev-badge-done     { color: #16a34a; }
+        .ev-fa-badge.ev-badge-declined { color: #ef4444; }
+        .ev-fa-badge.ev-badge-pending  { color: #d97706; }
+
+        /* FA icon for event / hearing */
+        .ev-fa-icon {
+            font-size: 10px;
+            flex-shrink: 0;
+            width: 12px;
+            text-align: center;
+        }
 
         /* Text colors per status */
         .evt-solicit .ev-title          { color: #92400e !important; }
         .evt-solicit-done .ev-title     { color: #14532d !important; }
         .evt-solicit-declined .ev-title { color: #7f1d1d !important; }
 
-        /* Event/Hearing keep original styling */
-        .evt-office .fc-event-main  { color: #1e40af !important; }
-        .evt-hearing .fc-event-main { color: #166534 !important; }
+        /* Event — active: blue */
+        .evt-office         { background: #eff6ff !important; border: none !important; border-left: 3px solid #3b82f6 !important; }
+        .evt-office .ev-title { color: #1e40af !important; }
+        /* Event — done: gray */
+        .evt-office-done    { background: #f1f5f9 !important; border: none !important; border-left: 3px solid #94a3b8 !important; }
+        .evt-office-done .ev-title { color: #64748b !important; }
+
+        /* Hearing — active: green */
+        .evt-hearing        { background: #dcfce7 !important; border: none !important; border-left: 3px solid #22c55e !important; }
+        .evt-hearing .ev-title { color: #166534 !important; }
+        /* Hearing — done: gray */
+        .evt-hearing-done   { background: #f1f5f9 !important; border: none !important; border-left: 3px solid #94a3b8 !important; }
+        .evt-hearing-done .ev-title { color: #64748b !important; }
+
+        /* Icon inside custom event */
+        .ev-icon { font-size: 10px; flex-shrink: 0; line-height: 1; }
         .evt-office { background: #eff6ff !important; border: none !important; border-left: 3px solid #3b82f6 !important; }
         .evt-office .fc-event-main { color: #1e40af !important; }
         .evt-hearing { background: #dcfce7 !important; border: none !important; border-left: 3px solid #22c55e !important; }
@@ -524,7 +547,7 @@
             </div>
             <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-times"></i></button>
         </div>
-        <form id="main-form" onsubmit="event.preventDefault();saveForm()" class="modal-body">
+        <form id="main-form" onsubmit="event.preventDefault()" class="modal-body">
             <input type="hidden" id="entry-id">
             <input type="hidden" id="entry-type" value="solicitation">
             <!-- SOLICITATION -->
@@ -564,11 +587,16 @@
                 <div class="fg"><label class="fl" id="label-evt-desc">Notes / Description</label><textarea id="evt-description" class="fta" placeholder="Additional notes..."></textarea></div>
             </div>
         </form>
-        <div class="modal-foot">
+        <div class="modal-foot" style="flex-wrap:wrap;gap:8px">
             <button type="button" id="btn-print" style="display:none" class="fbtn fbtn-ghost" onclick="printVoucher()"><i class="fa-solid fa-print"></i> Print</button>
-            <div style="flex:1"></div>
+            <div style="flex:1;min-width:0"></div>
             <button type="button" id="btn-delete" style="display:none" class="fbtn fbtn-danger" onclick="deleteEntry()"><i class="fa-solid fa-trash"></i></button>
-            <button type="submit" form="main-form" class="fbtn fbtn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Locally</button>
+            <button type="button" class="fbtn fbtn-ghost" onclick="saveFormLocal()" style="border:1px solid #e2e8f0">
+                <i class="fa-solid fa-floppy-disk"></i> Save Locally
+            </button>
+            <button type="button" class="fbtn fbtn-primary" onclick="saveFormAndUpload()">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Upload
+            </button>
         </div>
     </div>
 </div>
@@ -849,7 +877,24 @@
         if(isSol){const addr=v('address');entry={id,controlNo:id,title:v('title'),start:v('date'),extendedProps:{type:'solicitation',description:v('description'),address:addr,town:addr,brgy:'',contact:v('contact'),status:v('status'),amount:v('amount'),personClaimed:v('person-claimed'),dateGiven:v('date-given'),releasedBy:v('released-by'),time:'',venue:''}};}
         else{entry={id,controlNo:id,title:v('evt-title'),start:v('evt-date'),extendedProps:{type,time:v('time'),venue:v('venue'),description:v('evt-description'),address:'',town:'',brgy:'',contact:'',status:'n/a',amount:'',personClaimed:'',dateGiven:'',releasedBy:''}};}
         const idx=GLOBAL_DATA.findIndex(x=>x.id==id);if(idx>-1)GLOBAL_DATA[idx]=entry;else GLOBAL_DATA.push(entry);
-        saveDataLocally();closeModal();await appAlert("Saved","Record saved to your device.","success");
+        saveDataLocally();
+        return entry; // return so wrappers handle close+alert
+    }
+
+    // ── Save locally only ──
+    async function saveFormLocal() {
+        const entry = await saveForm();
+        if (!entry) return; // validation failed — saveForm already showed alert
+        closeModal();
+        await appAlert("Saved Locally", "Record saved to your device.", "success");
+    }
+
+    // ── Save locally AND sync to Google Sheet ──
+    async function saveFormAndUpload() {
+        const entry = await saveForm();
+        if (!entry) return; // validation failed
+        closeModal();
+        await syncToCloud();
     }
 
     // ── DELETE ──
@@ -923,7 +968,7 @@
             events:   GLOBAL_DATA,
             allDayText: '',
 
-            // ── Class per event type + solicitation status ──
+            // ── Class per event type + status ──
             eventClassNames: arg => {
                 const p = arg.event.extendedProps || {};
                 if (p.type === 'solicitation') {
@@ -931,34 +976,55 @@
                     if (p.status === 'declined') return ['evt-solicit-declined'];
                     return ['evt-solicit'];
                 }
-                if (p.type === 'hearing') return ['evt-hearing'];
-                return ['evt-office'];
+                if (p.type === 'hearing') {
+                    return p.status === 'done' ? ['evt-hearing-done'] : ['evt-hearing'];
+                }
+                // event
+                return p.status === 'done' ? ['evt-office-done'] : ['evt-office'];
             },
 
-            // ── Custom render for solicitations — show status badge ──
+            // ── Custom render using inline SVG — works inside FullCalendar ──
             eventContent: arg => {
-                const p    = arg.event.extendedProps || {};
+                const p     = arg.event.extendedProps || {};
                 const title = arg.event.title || '';
+                const done  = p.status === 'done';
+
+                // ── SVG: Bell (event) ──
+                const svgBell = (color) => `<svg width="11" height="11" viewBox="0 0 24 24" fill="${color}" style="flex-shrink:0;margin-right:3px" xmlns="http://www.w3.org/2000/svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>`;
+
+                // ── SVG: Gavel (hearing) ──
+                const svgGavel = (color) => `<svg width="11" height="11" viewBox="0 0 24 24" fill="${color}" style="flex-shrink:0;margin-right:3px" xmlns="http://www.w3.org/2000/svg"><path d="M1 21h12v2H1v-2zM5.245 8.07l2.83-2.827 14.14 14.142-2.828 2.828L5.245 8.07zM12.317 1l5.657 5.656-2.83 2.83-5.655-5.657L12.317 1zM3.83 8.485l5.657 5.657-2.828 2.828L1 11.313l2.83-2.828z"/></svg>`;
+
+                // ── SVG: Circle Check (solicitation done) ──
+                const svgCheck = `<svg width="11" height="11" viewBox="0 0 24 24" fill="#16a34a" style="flex-shrink:0;margin-right:3px" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>`;
+
+                // ── SVG: Circle Minus (solicitation pending) ──
+                const svgPending = `<svg width="11" height="11" viewBox="0 0 24 24" fill="#d97706" style="flex-shrink:0;margin-right:3px" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>`;
+
+                // ── SVG: Circle X (solicitation declined) ──
+                const svgDeclined = `<svg width="11" height="11" viewBox="0 0 24 24" fill="#ef4444" style="flex-shrink:0;margin-right:3px" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>`;
+
+                const makeNode = (svgStr) => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'fc-event-custom';
+                    wrap.innerHTML = svgStr + `<span class="ev-title">${title}</span>`;
+                    return [wrap];
+                };
 
                 if (p.type === 'solicitation') {
-                    // Badge icon and class per status
-                    let badgeClass = 'ev-badge-pending';
-                    let badgeIcon  = '●';
-                    if (p.status === 'done') {
-                        badgeClass = 'ev-badge-done';
-                        badgeIcon  = '✓';
-                    } else if (p.status === 'declined') {
-                        badgeClass = 'ev-badge-declined';
-                        badgeIcon  = '✕';
-                    }
-                    return {
-                        html: `<div class="fc-event-custom">
-                                 <span class="ev-badge ${badgeClass}">${badgeIcon}</span>
-                                 <span class="ev-title">${title}</span>
-                               </div>`
-                    };
+                    if (p.status === 'done')     return { domNodes: makeNode(svgCheck) };
+                    if (p.status === 'declined') return { domNodes: makeNode(svgDeclined) };
+                    return { domNodes: makeNode(svgPending) };
                 }
-                // Events and hearings — default FullCalendar rendering
+
+                if (p.type === 'event') {
+                    return { domNodes: makeNode(svgBell(done ? '#94a3b8' : '#3b82f6')) };
+                }
+
+                if (p.type === 'hearing') {
+                    return { domNodes: makeNode(svgGavel(done ? '#94a3b8' : '#16a34a')) };
+                }
+
                 return true;
             },
 
