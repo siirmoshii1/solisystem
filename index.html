@@ -1698,7 +1698,7 @@ Types: ${typeLabels}`,
         const sel = document.getElementById('description-sel');
         if (!sel) return;
         const purposes = loadPurposes();
-        sel.innerHTML = '<option value="">— Select a purpose —</option>';
+        sel.innerHTML = '<option value="">— Select or type below —</option>';
         purposes.forEach(p => {
             const opt = document.createElement('option');
             opt.value = p;
@@ -1706,94 +1706,25 @@ Types: ${typeLabels}`,
             if (p === selectedValue) opt.selected = true;
             sel.appendChild(opt);
         });
+        // Always add a "Custom..." option at the bottom
         const custom = document.createElement('option');
         custom.value = '__custom__';
         custom.textContent = '✏️ Type custom...';
         sel.appendChild(custom);
-        const delOpt = document.createElement('option');
-        delOpt.value = '__delete__';
-        delOpt.textContent = '🗑️ Delete an option...';
-        sel.appendChild(delOpt);
-    }
-
-    async function deletePurposeOption() {
-        const purposes = loadPurposes();
-        if (purposes.length === 0) {
-            await appAlert('Empty', 'No custom options to delete.', 'info');
-            return;
-        }
-        // Show a secondary select to pick which to delete
-        const name = await promptSelect(
-            'Delete Purpose Option',
-            'Select the option to remove from the dropdown:',
-            purposes
-        );
-        if (!name) return;
-        const idx = purposes.indexOf(name);
-        if (idx === -1) return;
-        const ok = await appConfirm(
-            'Delete Option',
-            `Remove "${name}" from the purpose list?`,
-            'Delete', 'error'
-        );
-        if (!ok) return;
-        purposes.splice(idx, 1);
-        savePurposes(purposes);
-        // Reset field
-        const sel = document.getElementById('description-sel');
-        const inp = document.getElementById('description');
-        if (inp && inp.value === name) inp.value = '';
-        populatePurposeDropdown('');
-        if (sel) sel.value = '';
-        await appAlert('Deleted', `"${name}" has been removed.`, 'success');
-    }
-
-    // Simple select-from-list prompt using app-dialog
-    function promptSelect(title, message, options) {
-        return new Promise(resolve => {
-            _dlg(title, message, 'warning');
-            const optHtml = options.map((o,i) =>
-                `<option value="${i}">${o}</option>`
-            ).join('');
-            document.getElementById('dlg-btns').innerHTML = `
-                <div style="width:100%;padding:0 16px 12px;display:flex;flex-direction:column;gap:8px">
-                    <select id="prompt-sel" class="fsel" style="font-size:13px">
-                        <option value="">— Select —</option>
-                        ${optHtml}
-                    </select>
-                    <div style="display:flex;gap:8px">
-                        <button class="dlg-btn cancel" id="psel-cancel" style="flex:1;padding:10px;border:1px solid #f1f5f9;border-radius:8px">Cancel</button>
-                        <button class="dlg-btn confirm" id="psel-ok" style="flex:1;padding:10px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;color:#dc2626">Delete</button>
-                    </div>
-                </div>`;
-            document.getElementById('app-dialog').classList.add('show');
-            document.getElementById('psel-cancel').onclick = () => {
-                document.getElementById('app-dialog').classList.remove('show');
-                resolve(null);
-            };
-            document.getElementById('psel-ok').onclick = () => {
-                const sel = document.getElementById('prompt-sel');
-                const idx = parseInt(sel?.value);
-                document.getElementById('app-dialog').classList.remove('show');
-                resolve(!isNaN(idx) && options[idx] ? options[idx] : null);
-            };
-        });
     }
 
     function onPurposeSelect(sel) {
         const inp = document.getElementById('description');
         if (!inp) return;
-        if (sel.value === '__delete__') {
-            sel.value = inp.value || '';
-            deletePurposeOption();
-        } else if (sel.value === '__custom__') {
+        if (sel.value === '__custom__') {
+            // Show text input for custom entry
             inp.style.display = '';
             inp.value = '';
             inp.focus();
-            sel.value = '';
+            sel.value = ''; // reset dropdown
         } else if (sel.value) {
             inp.style.display = 'none';
-            inp.value = sel.value;
+            inp.value = sel.value; // sync hidden input
         } else {
             inp.style.display = 'none';
             inp.value = '';
@@ -1879,612 +1810,88 @@ Types: ${typeLabels}`,
     }
 
     // ══════════════════════════════════════════════════════════
-    //  ADDRESS AUTOCOMPLETE — Complete Ilocos Sur barangays (599 entries)
-    //  Format: [barangay, municipality]
+    //  ADDRESS AUTOCOMPLETE — Ilocos Sur barangays + municipalities
     // ══════════════════════════════════════════════════════════
 
     const ILOCOS_SUR_ADDRESSES = [
-        ["Abaccan", "Sigay"],
-        ["Abaya", "Galimuyod"],
-        ["Abuor", "Narvacan"],
-        ["Ag-agrao", "Santa Maria"],
-        ["Ag-aguman", "Tagudin"],
-        ["Aggay", "Bantay"],
-        ["Aguing", "Sinait"],
-        ["Al-aludig", "Santiago"],
-        ["Alangan", "Magsingal"],
-        ["Alfonso (Tangaoan)", "Gregorio del Pilar"],
-        ["Alilem", "Ilocos Sur"],
-        ["Alilem Daya (Poblacion)", "Alilem"],
-        ["Alinaay", "Cabugao"],
-        ["Alincaoeg", "Santa Lucia"],
-        ["Allangigan Primero", "Candon City"],
-        ["Allangigan Segundo", "Candon City"],
-        ["Aluling", "Cervantes"],
-        ["Amarao", "Santa Cruz"],
-        ["Ambalayat", "Tagudin"],
-        ["Ambucao", "Santiago"],
-        ["Ambugat", "Burgos"],
-        ["Ambulogan", "Narvacan"],
-        ["Amguid", "Candon City"],
-        ["Amilongan", "Alilem"],
-        ["Ampandula", "Santa"],
-        ["Ampuagan", "Santa Maria"],
-        ["An-annam", "Bantay"],
-        ["Anaao", "Alilem"],
-        ["Angkileng", "Santa Lucia"],
-        ["Anonang Mayor", "Caoayan"],
-        ["Anonang Menor", "Caoayan"],
-        ["Ansad", "San Esteban"],
-        ["Apang", "Alilem"],
-        ["Apatot", "San Esteban"],
-        ["Apaya", "Alilem"],
-        ["Aquib", "Narvacan"],
-        ["Aragan", "Cabugao"],
-        ["Arangin", "Santa Lucia"],
-        ["Arnap", "Cabugao"],
-        ["Arnap", "San Ildefonso"],
-        ["Asilang", "San Juan (Lapog)"],
-        ["Atabay", "Salcedo (Baugen)"],
-        ["Ayudante", "Candon City"],
-        ["Ayusan (Poblacion)", "Santa Lucia"],
-        ["Ayusan Norte", "Vigan City"],
-        ["Ayusan Sur", "Vigan City"],
-        ["Baballasioan", "Santa Maria"],
-        ["Babayoan", "Santa Cruz"],
-        ["Bacar", "Magsingal"],
-        ["Baclig (Poblacion)", "Cabugao"],
-        ["Bacsayan", "Santa Cruz"],
-        ["Bacsil", "San Juan (Lapog)"],
-        ["Bagani Camposanto", "Candon City"],
-        ["Bagani Gabor", "Candon City"],
-        ["Bagani Tocgo", "Candon City"],
-        ["Bagani Ubbog", "Candon City"],
-        ["Bagar", "Candon City"],
-        ["Bagbagotot", "Banayoyo"],
-        ["Baggoc", "Caoayan"],
-        ["Bahet", "San Ildefonso"],
-        ["Balaleng", "Bantay"],
-        ["Balaweg", "Nagbukel"],
-        ["Balbalayang (Poblacion)", "Sugpon"],
-        ["Balidbid", "Salcedo (Baugen)"],
-        ["Balingaoan", "Candon City"],
-        ["Baliw", "San Juan (Lapog)"],
-        ["Baliw", "Sinait"],
-        ["Baliw Daya", "Santa Maria"],
-        ["Baliw Laud", "Santa Maria"],
-        ["Ballaigui (Poblacion)", "Sinait"],
-        ["Baluarte", "Salcedo (Baugen)"],
-        ["Balugang", "Burgos"],
-        ["Banaoang", "Bantay"],
-        ["Banaoang", "Santa"],
-        ["Banay", "Santa Cruz"],
-        ["Banayoyo", "Ilocos Sur"],
-        ["Banbanaal", "Banayoyo"],
-        ["Banbanaba", "Santa Lucia"],
-        ["Bandril", "Nagbukel"],
-        ["Banga", "Sugpon"],
-        ["Bangbangar", "Burgos"],
-        ["Banglayan", "Narvacan"],
-        ["Bani", "Santa Lucia"],
-        ["Bannuar (Poblacion)", "San Juan (Lapog)"],
-        ["Banoen", "Quirino (Angkaki)"],
-        ["Bantaoay", "San Vicente"],
-        ["Bantay", "Ilocos Sur"],
-        ["Bantay Abot", "Narvacan"],
-        ["Bantugo", "Nagbukel"],
-        ["Banucal", "Lidlidda"],
-        ["Bao-as", "Santa Lucia"],
-        ["Baracbac", "Galimuyod"],
-        ["Baracbac", "Sinait"],
-        ["Baracbac", "Tagudin"],
-        ["Barangay 1 (Poblacion)", "Bantay"],
-        ["Barangay 2 (Poblacion)", "Bantay"],
-        ["Barangay 3 (Poblacion)", "Bantay"],
-        ["Barangay 4 (Poblacion)", "Bantay"],
-        ["Barangay 5 (Poblacion)", "Bantay"],
-        ["Barangay 6 (Poblacion)", "Bantay"],
-        ["Barangay I (Poblacion)", "Vigan City"],
-        ["Barangay II (Poblacion)", "Vigan City"],
-        ["Barangay III (Poblacion)", "Vigan City"],
-        ["Barangay IV (Poblacion)", "Vigan City"],
-        ["Barangay IX (Poblacion)", "Vigan City"],
-        ["Barangay V (Poblacion)", "Vigan City"],
-        ["Barangay VI (Poblacion)", "Vigan City"],
-        ["Barangay VII (Poblacion)", "Vigan City"],
-        ["Barangay VIII (Poblacion)", "Vigan City"],
-        ["Barangobong (Poblacion)", "Santa Lucia"],
-        ["Barbar", "San Juan (Lapog)"],
-        ["Barbarit", "Magsingal"],
-        ["Barikir", "Sinait"],
-        ["Baringcucurong", "Suyo"],
-        ["Bario-an", "Tagudin"],
-        ["Baritao", "Tagudin"],
-        ["Barraca", "Vigan City"],
-        ["Basug", "Santa"],
-        ["Batbato", "Alilem"],
-        ["Bateria", "San Esteban"],
-        ["Bato", "Cabugao"],
-        ["Battog", "Sinait"],
-        ["Baybayabas", "Santiago"],
-        ["Baybayading", "Salcedo (Baugen)"],
-        ["Bayubay Norte", "San Vicente"],
-        ["Bayubay Sur", "San Vicente"],
-        ["Bayugao Este", "Santa Cruz"],
-        ["Bayugao Oeste", "Santa Cruz"],
-        ["Becques", "Tagudin"],
-        ["Beddeng Daya", "Vigan City"],
-        ["Beddeng Laud", "Vigan City"],
-        ["Belen", "San Ildefonso"],
-        ["Bequi-Walin", "Lidlidda"],
-        ["Besalan", "Santa Cruz"],
-        ["Bessang", "Burgos"],
-        ["Bia-o", "Santa Maria"],
-        ["Bidbiday", "Galimuyod"],
-        ["Bigbiga", "Santiago"],
-        ["Bimmanga", "Tagudin"],
-        ["Binacud", "Sinait"],
-        ["Binalayangan", "Santo Domingo"],
-        ["Binongan", "Santo Domingo"],
-        ["Bio", "Tagudin"],
-        ["Bisangol", "Banayoyo"],
-        ["Bitalag", "Tagudin"],
-        ["Bitong", "Galimuyod"],
-        ["Boguibog", "Salcedo (Baugen)"],
-        ["Bongtolan", "Vigan City"],
-        ["Bonifacio (Poblacion)", "Cabugao"],
-        ["Borobor", "Galimuyod"],
-        ["Borobor", "Santo Domingo"],
-        ["Borono", "Tagudin"],
-        ["Bucalag", "Santa"],
-        ["Bucao East", "Tagudin"],
-        ["Bucao West", "Tagudin"],
-        ["Bugbuga", "Santa Cruz"],
-        ["Bugnay", "Candon City"],
-        ["Bugui", "Lidlidda"],
-        ["Bulag", "Bantay"],
-        ["Bulala", "Vigan City"],
-        ["Bulala-Leguey", "Salcedo (Baugen)"],
-        ["Bulanos", "Narvacan"],
-        ["Bulbulala", "Santiago"],
-        ["Buliclic", "Santa Lucia"],
-        ["Bungro", "Cabugao"],
-        ["Bungro", "Magsingal"],
-        ["Bungro", "San Ildefonso"],
-        ["Buquig", "Bantay"],
-        ["Burgos", "Ilocos Sur"],
-        ["Burgos (Poblacion)", "Santa Lucia"],
-        ["Busel-busel", "Santiago"],
-        ["Busiing Norte", "San Ildefonso"],
-        ["Busiing Sur", "San Ildefonso"],
-        ["Bussot", "Gregorio del Pilar"],
-        ["Butir", "Santa Maria"],
-        ["Butol", "Santiago"],
-        ["Cabalangegan", "Vigan City"],
-        ["Cabalanggan", "Bantay"],
-        ["Cabangaran", "Santa"],
-        ["Cabanglotan", "San Juan (Lapog)"],
-        ["Cabangtalan", "Sinait"],
-        ["Cabarambanan", "Sinait"],
-        ["Cabaritan", "Santa Lucia"],
-        ["Cabaritan", "Santo Domingo"],
-        ["Cabaroan", "Bantay"],
-        ["Cabaroan", "Magsingal"],
-        ["Cabaroan", "San Esteban"],
-        ["Cabaroan", "Santa Catalina"],
-        ["Cabaroan", "Santa Maria"],
-        ["Cabaroan", "Tagudin"],
-        ["Cabaroan (Poblacion)", "San Emilio"],
-        ["Cabaroan Daya", "Vigan City"],
-        ["Cabaroan Laud", "Vigan City"],
-        ["Cabcaburao", "Burgos"],
-        ["Cabigbigaan", "Santo Domingo"],
-        ["Cabittaogan", "Santa Catalina"],
-        ["Cabugao", "Suyo"],
-        ["Cabugao", "Ilocos Sur"],
-        ["Cabugbugan", "Tagudin"],
-        ["Cabulalaan", "Sinait"],
-        ["Cabulanglangan", "Tagudin"],
-        ["Cabuloan", "Santa Catalina"],
-        ["Caburao", "Santiago"],
-        ["Cabusligan", "Bantay"],
-        ["Cacadiran", "Cabugao"],
-        ["Cacandongan", "San Juan (Lapog)"],
-        ["Cadacad", "Burgos"],
-        ["Cadacad", "Nagbukel"],
-        ["Cadacad", "Narvacan"],
-        ["Cadanglaan", "Banayoyo"],
-        ["Cadanglaan", "Magsingal"],
-        ["Cadanglaan", "Sinait"],
-        ["Caellayan", "Cabugao"],
-        ["Cagayungan", "Narvacan"],
-        ["Calangcuasan", "Salcedo (Baugen)"],
-        ["Calanutian", "Sinait"],
-        ["Calaoaan", "Candon City"],
-        ["Calaoaan", "Santa Cruz"],
-        ["Calautit", "Santo Domingo"],
-        ["Calay-ab", "Santo Domingo"],
-        ["Calimugtong", "Galimuyod"],
-        ["Calingayan", "Sinait"],
-        ["Callaguip", "Caoayan"],
-        ["Callitong", "Burgos"],
-        ["Calongbuyan", "Candon City"],
-        ["Calongbuyan", "Galimuyod"],
-        ["Calumbaya", "Galimuyod"],
-        ["Calungboyan", "Santa"],
-        ["Calungbuyan", "Lidlidda"],
-        ["Camangaan", "Vigan City"],
-        ["Camanggaan", "San Juan (Lapog)"],
-        ["Camanggaan", "Santa Cruz"],
-        ["Camarao", "Narvacan"],
-        ["Camestizoan", "Santo Domingo"],
-        ["Camindoroan", "San Juan (Lapog)"],
-        ["Candalican", "Santa Cruz"],
-        ["Candon City", "Ilocos Sur"],
-        ["Caoayan", "Sugpon"],
-        ["Caoayan", "Ilocos Sur"],
-        ["Capangdanan", "Bantay"],
-        ["Capangpangan", "Vigan City"],
-        ["Caparacadan", "Caoayan"],
-        ["Capariaan", "Santa Cruz"],
-        ["Cappa-cappa", "San Esteban"],
-        ["Caraisan", "Magsingal"],
-        ["Carcarabasa", "Lidlidda"],
-        ["Caronoan", "San Juan (Lapog)"],
-        ["Carusipan", "Cabugao"],
-        ["Casiber", "Santa"],
-        ["Casilagan", "Nagbukel"],
-        ["Casilagan", "Narvacan"],
-        ["Casilagan", "Santa Cruz"],
-        ["Casilagan Norte", "Banayoyo"],
-        ["Casilagan Sur", "Banayoyo"],
-        ["Casili", "Santo Domingo"],
-        ["Casocos", "Nagbukel"],
-        ["Catayagan", "Santa Lucia"],
-        ["Caterman", "Candon City"],
-        ["Catucdaan", "Cabugao"],
-        ["Cayus", "Quirino (Angkaki)"],
-        ["Cervantes", "Ilocos Sur"],
-        ["Codoog", "Narvacan"],
-        ["Comillas North", "Cervantes"],
-        ["Comillas South", "Cervantes"],
-        ["Concepcion", "Gregorio del Pilar"],
-        ["Concepcion (Poblacion)", "Cervantes"],
-        ["Conconig East", "Santa Lucia"],
-        ["Conconig West", "Santa Lucia"],
-        ["Coscosnong", "Santa Cruz"],
-        ["Cuancabal", "Cabugao"],
-        ["Cuantacla", "Cabugao"],
-        ["Cubcubboot", "Candon City"],
-        ["Culiong", "Salcedo (Baugen)"],
-        ["Curtin", "Sinait"],
-        ["Daclapan", "Cabugao"],
-        ["Dacutan", "Magsingal"],
-        ["Dacutan", "Tagudin"],
-        ["Dadalaquiten Norte", "Sinait"],
-        ["Dadalaquiten Sur", "Sinait"],
-        ["Daddaay", "Alilem"],
-        ["Dalawa", "Alilem"],
-        ["Daldagan", "Galimuyod"],
-        ["Daligan", "Santa Cruz"],
-        ["Damacuag", "Santa Lucia"],
-        ["Dammay", "Santa"],
-        ["Dan-ar", "Santiago"],
-        ["Danac", "Sugpon"],
-        ["Danuman East", "Santa Maria"],
-        ["Danuman West", "Santa Maria"],
-        ["Dapdappig", "Gregorio del Pilar"],
-        ["Darao", "San Juan (Lapog)"],
-        ["Darapidap", "Candon City"],
-        ["Dardarat", "Cabugao"],
-        ["Dardarat", "San Juan (Lapog)"],
-        ["Dardarat", "Tagudin"],
-        ["Dasay", "Narvacan"],
-        ["Dayanki", "Burgos"],
-        ["Dean Leopoldo Yabes (Pug-os)", "Sinait"],
-        ["Del Pilar (Poblacion)", "Tagudin"],
-        ["Dili", "Santa Cruz"],
-        ["Dinalaoan", "Narvacan"],
-        ["Dinaratan", "Salcedo (Baugen)"],
-        ["Dinwede East", "Cervantes"],
-        ["Dinwede West", "Cervantes"],
-        ["Dirdirig (Dirdirig-Paday)", "Burgos"],
-        ["Don Alejandro Quirologico (Poblacion)", "Caoayan"],
-        ["Don Dimas Querubin (Poblacion)", "Caoayan"],
-        ["Don Lorenzo Querubin (Poblacion)", "Caoayan"],
-        ["Dongalo", "San Ildefonso"],
-        ["Dunglayan", "Santa Maria"],
-        ["Duyayyat", "Sinait"],
-        ["Elefante", "Banayoyo"],
-        ["Estancia", "Narvacan"],
-        ["Farola", "Tagudin"],
-        ["Flora", "Santo Domingo"],
-        ["Fuerte", "Caoayan"],
-        ["Gabao", "Santiago"],
-        ["Gabor Norte", "Santa Cruz"],
-        ["Gabor Sur", "Santa Cruz"],
-        ["Gabur", "Tagudin"],
-        ["Galimuyod", "Ilocos Sur"],
-        ["Garitan", "Tagudin"],
-        ["Gongogong", "San Ildefonso"],
-        ["Gregorio del Pilar", "Ilocos Sur"],
-        ["Guardia", "Banayoyo"],
-        ["Guimod", "Bantay"],
-        ["Guimod Norte", "San Juan (Lapog)"],
-        ["Guimod Sur", "San Juan (Lapog)"],
-        ["Guinabang", "Santiago"],
-        ["Gusing", "Santa Maria"],
-        ["Iboy", "San Ildefonso"],
-        ["Immayos Norte", "San Juan (Lapog)"],
-        ["Immayos Sur", "San Juan (Lapog)"],
-        ["Imus", "Santiago"],
-        ["Jardin", "Tagudin"],
-        ["Jordan", "Sinait"],
-        ["Kaliwakiw", "Salcedo (Baugen)"],
-        ["Kalumsing", "San Emilio"],
-        ["Katipunan", "Sinait"],
-        ["Kiat", "Alilem"],
-        ["Kilang", "Galimuyod"],
-        ["Kinamantirisan", "San Ildefonso"],
-        ["Kinmarin", "Salcedo (Baugen)"],
-        ["Labnig", "San Juan (Lapog)"],
-        ["Labut", "Lidlidda"],
-        ["Labut", "Magsingal"],
-        ["Labut Norte", "Santa"],
-        ["Labut Sur", "Santa"],
-        ["Lacong", "Tagudin"],
-        ["Lagatit", "Santo Domingo"],
-        ["Lalong", "Santa Cruz"],
-        ["Lamag (Tubtuba)", "Quirino (Angkaki)"],
-        ["Lancuas", "San Emilio"],
-        ["Lang-ayan", "Santiago"],
-        ["Langaoan", "Santa Maria"],
-        ["Langlangca Primero", "Candon City"],
-        ["Langlangca Segundo", "Candon City"],
-        ["Lanipao", "Narvacan"],
-        ["Lantag", "Santa Cruz"],
-        ["Lantag", "Tagudin"],
-        ["Laoingen", "Santo Domingo"],
-        ["Lapting", "Nagbukel"],
-        ["Lapting", "San Juan (Lapog)"],
-        ["Las-ud", "Santa Cruz"],
-        ["Las-ud", "Tagudin"],
-        ["Laslasong Norte", "Santa Maria"],
-        ["Laslasong Sur", "Santa Maria"],
-        ["Laslasong West", "Santa Maria"],
-        ["Legaspi", "Galimuyod"],
-        ["Legleg (Poblacion)", "Quirino (Angkaki)"],
-        ["Lesseb", "Burgos"],
-        ["Lesseb", "Santa Maria"],
-        ["Libang", "Cervantes"],
-        ["Libtong", "Tagudin"],
-        ["Licungan (Cullang)", "Sugpon"],
-        ["Lidlidda", "Ilocos Sur"],
-        ["Lingsat", "Bantay"],
-        ["Lingsat", "Santa Maria"],
-        ["Lintic", "Banayoyo"],
-        ["Lipit", "Cabugao"],
-        ["Lira (Poblacion)", "San Juan (Lapog)"],
-        ["Lopez", "Banayoyo"],
-        ["Luba", "Santa Lucia"],
-        ["Lubing", "Burgos"],
-        ["Lubnac", "Tagudin"],
-        ["Lubong", "San Vicente"],
-        ["Lubong", "Santa Lucia"],
-        ["Lubong", "Santa Maria"],
-        ["Lucaban", "Burgos"],
-        ["Lucbuban", "Salcedo (Baugen)"],
-        ["Luna", "Burgos"],
-        ["Lungog", "Narvacan"],
-        ["Lussoc", "Santo Domingo"],
-        ["Maas-asin", "Magsingal"],
-        ["Mabayag", "Galimuyod"],
-        ["Mabilbila Norte", "Santa"],
-        ["Mabilbila Sur", "Santa"],
-        ["Mabileg", "Sigay"],
-        ["Macabiag (Poblacion)", "Sinait"],
-        ["Macaoayan", "Burgos"],
-        ["Macatcatud", "Magsingal"],
-        ["Madarang", "Salcedo (Baugen)"],
-        ["Magsaysay", "Sinait"],
-        ["Magsaysay (Poblacion)", "Tagudin"],
-        ["Magsaysay District (Poblacion)", "Santa"],
-        ["Magsingal", "Ilocos Sur"],
-        ["Malacañang", "Tagudin"],
-        ["Malamin", "San Juan (Lapog)"],
-        ["Malaya", "Cervantes"],
-        ["Malideg", "Quirino (Angkaki)"],
-        ["Maligcong", "Salcedo (Baugen)"],
-        ["Malingeb", "Bantay"],
-        ["Mambog", "Santa Cruz"],
-        ["Mambug", "Burgos"],
-        ["Mambug", "Santiago"],
-        ["Man-atong", "Suyo"],
-        ["Manaboc", "Burgos"],
-        ["Manangat", "Caoayan"],
-        ["Mantanas", "Santa Cruz"],
-        ["Manueva", "Santa"],
-        ["Manzante", "Magsingal"],
-        ["Mapanit", "Burgos"],
-        ["Mapisi", "Nagbukel"],
-        ["Maradodon", "Cabugao"],
-        ["Maratudo", "Magsingal"],
-        ["Marcos (Poblacion)", "Santa"],
-        ["Margaay", "Cabugao"],
-        ["Margaay", "Narvacan"],
-        ["Marnay", "Sinait"],
-        ["Marozo", "Narvacan"],
-        ["Masadag", "Sinait"],
-        ["Matallucod", "Sigay"],
-        ["Matanubong", "Galimuyod"],
-        ["Matibuey", "San Emilio"],
-        ["Matue-Butarag", "Gregorio del Pilar"],
-        ["Maynganay Norte", "Santa Maria"],
-        ["Maynganay Sur", "Santa Maria"],
-        ["Mckinley", "Galimuyod"],
-        ["Mindoro", "Vigan City"],
-        ["Mira", "Bantay"],
-        ["Miramar", "Magsingal"],
-        ["Mission", "Nagbukel"],
-        ["Montero", "Banayoyo"],
-        ["Muraya", "San Juan (Lapog)"],
-        ["Nagbalioartian", "Sinait"],
-        ["Nagbettedan", "Santo Domingo"],
-        ["Nagbukel", "Ilocos Sur"],
-        ["Nagcullooban", "Sinait"],
-        ["Naglaoa-an", "Santo Domingo"],
-        ["Nagongburan", "Sinait"],
-        ["Nagsantaan", "Cabugao"],
-        ["Nagsantaan", "Sinait"],
-        ["Nagsayaoan", "Santa Cruz"],
-        ["Nagsingcaoan", "Candon City"],
-        ["Nagtablaan", "Santa Lucia"],
-        ["Naguiddayan", "Narvacan"],
-        ["Namboongan", "Santa Cruz"],
-        ["Nangalisan", "Candon City"],
-        ["Nangalisan", "Santa Cruz"],
-        ["Napaset", "Narvacan"],
-        ["Narvacan", "Ilocos Sur"],
-        ["Narvacan District", "Narvacan"],
-        ["Natividad (Bulaoen)", "Santa"],
-        ["Natividad (Poblacion)", "Tagudin"],
-        ["Ngolos", "Magsingal"],
-        ["Ngungunoy", "Cabugao"],
-        ["Nocoloan", "Cabugao"],
-        ["Norteam", "Bantay"],
-        ["Oaig-Daya", "Sinait"],
-        ["Oaig-Daya", "Quirino (Angkaki)"],
-        ["Oaig-Ubbog", "Sinait"],
-        ["Obbog", "Vigan City"],
-        ["Ora Centro", "Bantay"],
-        ["Ora Este", "Bantay"],
-        ["Ora Oeste", "Bantay"],
-        ["Oring", "Sinait"],
-        ["Paayas", "Cabugao"],
-        ["Pabalic", "Santa Cruz"],
-        ["Padong", "Narvacan"],
-        ["Pagleddegan", "Tagudin"],
-        ["Paguraper", "San Juan (Lapog)"],
-        ["Palacapac", "Candon City"],
-        ["Palang", "Vigan City"],
-        ["Palongpong", "Tagudin"],
-        ["Panay", "Candon City"],
-        ["Pantay Daya", "Vigan City"],
-        ["Pantay Fatima", "Vigan City"],
-        ["Pantay Laud", "Vigan City"],
-        ["Paoa", "Vigan City"],
-        ["Paratong", "Narvacan"],
-        ["Paratong", "Vigan City"],
-        ["Parparia", "Narvacan"],
-        ["Patpata Primero", "Candon City"],
-        ["Patpata Segundo", "Candon City"],
-        ["Payao", "Sinait"],
-        ["Pias", "Santiago"],
-        ["Piddig", "Burgos"],
-        ["Pidpid", "Bantay"],
-        ["Poblacion", "Alilem"],
-        ["Poblacion", "Banayoyo"],
-        ["Poblacion", "Bantay"],
-        ["Poblacion", "Burgos"],
-        ["Poblacion", "Cabugao"],
-        ["Poblacion", "Caoayan"],
-        ["Poblacion", "Cervantes"],
-        ["Poblacion", "Galimuyod"],
-        ["Poblacion", "Gregorio del Pilar"],
-        ["Poblacion", "Lidlidda"],
-        ["Poblacion", "Magsingal"],
-        ["Poblacion", "Nagbukel"],
-        ["Poblacion", "Narvacan"],
-        ["Poblacion", "Quirino (Angkaki)"],
-        ["Poblacion", "Salcedo (Baugen)"],
-        ["Poblacion", "Santiago"],
-        ["Poblacion", "Santo Domingo"],
-        ["Poblacion", "Sigay"],
-        ["Poblacion", "Sinait"],
-        ["Poblacion", "Sugpon"],
-        ["Poblacion", "Suyo"],
-        ["Poblacion", "Tagudin"],
-        ["Pong-ol", "Vigan City"],
-        ["Purok", "Vigan City"],
-        ["Puspus", "Bantay"],
-        ["Puyupuyan", "Magsingal"],
-        ["Quezon", "Burgos"],
-        ["Quezon", "Tagudin"],
-        ["Quinobquib", "Nagbukel"],
-        ["Quirino", "Quirino (Angkaki)"],
-        ["Quirino (Angkaki)", "Ilocos Sur"],
-        ["Raois", "Vigan City"],
-        ["Rugsuanan", "Vigan City"],
-        ["Sabangan", "Santa Lucia"],
-        ["Sagneb", "Sinait"],
-        ["Sagpat", "Tagudin"],
-        ["Salcedo (Baugen)", "Ilocos Sur"],
-        ["Salindeg", "Vigan City"],
-        ["Salindingan", "Santa Catalina"],
-        ["Salucag", "Narvacan"],
-        ["San Agustin", "Candon City"],
-        ["San Antonio", "Candon City"],
-        ["San Basilio", "Magsingal"],
-        ["San Emilio", "Ilocos Sur"],
-        ["San Esteban", "Ilocos Sur"],
-        ["San Ildefonso", "Ilocos Sur"],
-        ["San Jose", "Vigan City"],
-        ["San Jose", "Narvacan"],
-        ["San Juan (Lapog)", "Ilocos Sur"],
-        ["San Julian Norte", "Vigan City"],
-        ["San Julian Sur", "Vigan City"],
-        ["San Marcos", "Magsingal"],
-        ["San Pablo", "Sinait"],
-        ["San Pedro", "Vigan City"],
-        ["San Pedro", "Sinait"],
-        ["San Vicente", "Ilocos Sur"],
-        ["Santa", "Ilocos Sur"],
-        ["Santa Catalina", "Ilocos Sur"],
-        ["Santa Cruz", "Ilocos Sur"],
-        ["Santa Filomena", "Sinait"],
-        ["Santa Filomena", "Tagudin"],
-        ["Santa Lucia", "Ilocos Sur"],
-        ["Santa Maria", "Ilocos Sur"],
-        ["Santiago", "Ilocos Sur"],
-        ["Santo Domingo", "Ilocos Sur"],
-        ["Saoit", "Candon City"],
-        ["Sawat", "Sinait"],
-        ["Sigay", "Sigay"],
-        ["Sigay", "Ilocos Sur"],
-        ["Sigayan", "Santa Cruz"],
-        ["Sinabaan", "Candon City"],
-        ["Sinabaan", "Narvacan"],
-        ["Sinait", "Ilocos Sur"],
-        ["Sinait District", "Sinait"],
-        ["Sisim", "Alilem"],
-        ["Sobong", "Candon City"],
-        ["Sugpon", "Sugpon"],
-        ["Sugpon", "Ilocos Sur"],
-        ["Sulvec", "Narvacan"],
-        ["Suyo", "Suyo"],
-        ["Suyo", "Ilocos Sur"],
-        ["Tagudin", "Ilocos Sur"],
-        ["Tamag", "Vigan City"],
-        ["Tamurong", "Bantay"],
-        ["Tiglao", "Narvacan"],
-        ["Tinorian", "Salcedo (Baugen)"],
-        ["Tirong", "Tagudin"],
-        ["Turod", "Narvacan"],
-        ["Turod", "Santiago"],
-        ["Uddiawan", "Narvacan"],
-        ["Ulian", "Cabugao"],
-        ["Umanday", "Magsingal"],
-        ["Ungog", "Narvacan"],
-        ["Urayong", "Cabugao"],
-        ["Vigan City", "Vigan City"],
-        ["Vigan City", "Ilocos Sur"],
-        ["Villamar", "Santo Domingo"],
-        ["Viting", "Santa Maria"],
-        ["Wado", "Galimuyod"],
-        ["Waig", "Salcedo (Baugen)"],
-        ["Yuyeng", "Sinait"],
+        // Municipalities + City
+        'Vigan City','Candon City',
+        'Alilem','Banayoyo','Bantay','Burgos','Cabugao','Caoayan','Cervantes','Galimuyod',
+        'Gregorio del Pilar','Lidlidda','Magsingal','Nagbukel','Narvacan','Quirino',
+        'Salcedo','San Emilio','San Esteban','San Ildefonso','San Juan','San Vicente',
+        'Santa','Santa Catalina','Santa Cruz','Santa Lucia','Santa Maria','Santiago',
+        'Santo Domingo','Sigay','Sinait','Sugpon','Suyo','Tagudin',
+        // Common barangays - Vigan City
+        'Barangay I, Vigan City','Barangay II, Vigan City','Barangay III, Vigan City',
+        'Barangay IV, Vigan City','Barangay V, Vigan City','Barangay VI, Vigan City',
+        'Barangay VII, Vigan City','Barangay VIII, Vigan City','Barangay IX, Vigan City',
+        'Ayusan Norte, Vigan City','Ayusan Sur, Vigan City','Barraca, Vigan City',
+        'Bulala, Vigan City','Cabalangegan, Vigan City','Cabaroan Daya, Vigan City',
+        'Cabaroan Laud, Vigan City','Camangaan, Vigan City','Capangpangan, Vigan City',
+        'Mindoro, Vigan City','Nagsangalan, Vigan City','Pantay Daya, Vigan City',
+        'Pantay Fatima, Vigan City','Pantay Laud, Vigan City','Paoa, Vigan City',
+        'Paratong, Vigan City','Pong-ol, Vigan City','Purok, Vigan City',
+        'Raois, Vigan City','Rugsuanan, Vigan City','Salindeg, Vigan City',
+        'San Jose, Vigan City','San Julian Norte, Vigan City','San Julian Sur, Vigan City',
+        'San Pedro, Vigan City','Tamag, Vigan City',
+        // Bantay barangays
+        'Aggay, Bantay','Al-aludig, Bantay','Balaleng, Bantay','Ban-ar, Bantay',
+        'Barangay I, Bantay','Barangay II, Bantay','Barangay III, Bantay',
+        'Cabittaogan, Bantay','Cacandongan, Bantay','Ora Este, Bantay','Ora Centro, Bantay',
+        'Ora Oeste, Bantay','Puspus, Bantay','Tamurong, Bantay',
+        // Narvacan barangays
+        'Ambulogan, Narvacan','Banbanaba, Narvacan','Bantingan, Narvacan',
+        'Bulanos, Narvacan','Cabaroan, Narvacan','Calungbuyan, Narvacan',
+        'Camangaan, Narvacan','Caoayan, Narvacan','Centro Norte, Narvacan',
+        'Centro Sur, Narvacan','Dardarat, Narvacan','Dinalaoan, Narvacan',
+        'Guing-ayan, Narvacan','Lantag, Narvacan','Las-ud, Narvacan',
+        'Lungog, Narvacan','Margaay, Narvacan','Nagsabaran, Narvacan',
+        'Naguiddayan, Narvacan','Oaig-Daya, Narvacan','Oaig-Daya Norte, Narvacan',
+        'Padong, Narvacan','Paratong, Narvacan','Parparia, Narvacan',
+        'Pacpaco, Narvacan','Salucag, Narvacan','Sulvec, Narvacan',
+        'Turod, Narvacan','Uddiawan, Narvacan',
+        // Candon City
+        'Barangay I, Candon City','Barangay II, Candon City','Barangay III, Candon City',
+        'Barangay IV, Candon City','Barangay V, Candon City','Barangay VI, Candon City',
+        'Barangay VII, Candon City','Barangay VIII, Candon City',
+        'Allangigan Primero, Candon City','Allangigan Segundo, Candon City',
+        'Amguid, Candon City','Ayusan, Candon City','Calongbuyan, Candon City',
+        'Caterman, Candon City','Cubcubbu, Candon City','Darapidap, Candon City',
+        'Langlang, Candon City','Nagsantaan, Candon City','Nagsincaoan, Candon City',
+        'Oaig-Daya, Candon City','Palacapac, Candon City','Paras, Candon City',
+        'Parioc Primero, Candon City','Parioc Segundo, Candon City',
+        'Patpata Primero, Candon City','Patpata Segundo, Candon City',
+        'San Agustin, Candon City','San Antonio, Candon City',
+        // Santa Lucia
+        'Alinaay, Santa Lucia','Aroan, Santa Lucia','Banoen, Santa Lucia',
+        'Bayabas, Santa Lucia','Cabaroan, Santa Lucia','Cabugao, Santa Lucia',
+        'Cabusligan, Santa Lucia','Centro, Santa Lucia','Dalumpinas, Santa Lucia',
+        // Magsingal
+        'Barangay I, Magsingal','Barangay II, Magsingal','Barangay III, Magsingal',
+        'Abuor, Magsingal','Cabaroan, Magsingal','Daligan, Magsingal',
+        'Puyupuyan, Magsingal','San Basilio, Magsingal','San Marcos, Magsingal',
+        // Cabugao
+        'Barangay I, Cabugao','Barangay II, Cabugao','Barangay III, Cabugao',
+        'Barangay IV, Cabugao','Barangay V, Cabugao','Barangay VI, Cabugao',
+        'Barangay VII, Cabugao','Barangay VIII, Cabugao',
+        'Balaleng, Cabugao','Cabaroan, Cabugao','Nagsantaan, Cabugao',
+        // Sinait
+        'Barangay I, Sinait','Barangay II, Sinait','Barangay III, Sinait',
+        'Cabaroan, Sinait','Cabulalaan, Sinait','Daligan, Sinait',
+        'Paratong, Sinait','San Pedro, Sinait','Tamurong, Sinait',
+        // Tagudin
+        'Barangay I, Tagudin','Barangay II, Tagudin','Barangay III, Tagudin',
+        'Barangay IV, Tagudin','Barangay V, Tagudin','Barangay VI, Tagudin',
+        'Ambalayat, Tagudin','Buenlag, Tagudin','Cabaroan, Tagudin',
+        'Cabuloan, Tagudin','Lago, Tagudin','Malong, Tagudin',
+        // San Juan (Abra de Ilog)
+        'Barangay I, San Juan','Barangay II, San Juan','Barangay III, San Juan',
+        'Cabaroan, San Juan','Cabusligan, San Juan',
+        // Generic terms people type
+        'Ilocos Sur','Ilocos Norte','La Union','Abra','Pangasinan'
     ];
 
+    // Also allow free typing — we just suggest from the list
     let _addrSuggestions = [];
     let _addrActiveIdx   = -1;
 
@@ -2492,38 +1899,34 @@ Types: ${typeLabels}`,
         const q = inp.value.trim().toLowerCase();
         const box = document.getElementById('address-suggestions');
         if (!box) return;
+
         if (q.length < 2) { hideAddressSuggestions(); return; }
 
+        // Filter: match anywhere in the string, prioritize starts-with
         const matches = ILOCOS_SUR_ADDRESSES
-            .filter(([b, m]) => b.toLowerCase().includes(q) || m.toLowerCase().includes(q))
-            .sort(([a], [b2]) => {
-                const aS = a.toLowerCase().startsWith(q) ? 0 : 1;
-                const bS = b2.toLowerCase().startsWith(q) ? 0 : 1;
-                return aS - bS;
+            .filter(a => a.toLowerCase().includes(q))
+            .sort((a, b) => {
+                const aStarts = a.toLowerCase().startsWith(q) ? 0 : 1;
+                const bStarts = b.toLowerCase().startsWith(q) ? 0 : 1;
+                return aStarts - bStarts;
             })
-            .slice(0, 8);
+            .slice(0, 8); // max 8 suggestions
 
         if (matches.length === 0) { hideAddressSuggestions(); return; }
 
         _addrSuggestions = matches;
         _addrActiveIdx   = -1;
 
-        box.innerHTML = matches.map(([brgy, mun], i) => {
-            const full = brgy + ', ' + mun + ', Ilocos Sur';
-            const q2   = q.toLowerCase();
-            const idx  = brgy.toLowerCase().indexOf(q2);
-            let hi;
-            if (idx >= 0) {
-                hi = brgy.substring(0,idx)
-                   + '<b>' + brgy.substring(idx, idx+q.length) + '</b>'
-                   + brgy.substring(idx+q.length);
-            } else {
-                hi = brgy;
-            }
-            return `<div class="addr-suggestion" data-idx="${i}" onmousedown="selectAddress(${i})">
-                        ${hi}
-                        <div class="addr-sub">${mun}, Ilocos Sur</div>
-                    </div>`;
+        box.innerHTML = matches.map((m, i) => {
+            // Highlight matching part
+            const idx   = m.toLowerCase().indexOf(q);
+            const hi    = m.substring(0, idx)
+                        + '<b>' + m.substring(idx, idx + q.length) + '</b>'
+                        + m.substring(idx + q.length);
+            // Sub-label: municipality part after comma
+            const parts = m.split(',');
+            const sub   = parts.length > 1 ? `<div class="addr-sub">${parts.slice(1).join(',').trim()}</div>` : '';
+            return `<div class="addr-suggestion" data-idx="${i}" onmousedown="selectAddress(${i})">${hi}${sub}</div>`;
         }).join('');
 
         box.style.display = '';
@@ -2531,9 +1934,8 @@ Types: ${typeLabels}`,
 
     function selectAddress(idx) {
         const inp = document.getElementById('address');
-        if (inp && _addrSuggestions[idx]) {
-            const [brgy, mun] = _addrSuggestions[idx];
-            inp.value = brgy + ', ' + mun + ', Ilocos Sur';
+        if (inp && _addrSuggestions[idx] !== undefined) {
+            inp.value = _addrSuggestions[idx];
         }
         hideAddressSuggestions();
     }
@@ -2544,6 +1946,7 @@ Types: ${typeLabels}`,
         _addrActiveIdx = -1;
     }
 
+    // Keyboard navigation for address suggestions
     document.addEventListener('keydown', e => {
         const box = document.getElementById('address-suggestions');
         if (!box || box.style.display === 'none') return;
@@ -2555,14 +1958,172 @@ Types: ${typeLabels}`,
             e.preventDefault();
             _addrActiveIdx = Math.max(_addrActiveIdx - 1, 0);
         } else if (e.key === 'Enter' && _addrActiveIdx >= 0) {
-            e.preventDefault(); selectAddress(_addrActiveIdx); return;
+            e.preventDefault();
+            selectAddress(_addrActiveIdx);
+            return;
         } else if (e.key === 'Escape') {
-            hideAddressSuggestions(); return;
+            hideAddressSuggestions();
+            return;
         }
         items.forEach((el, i) => el.classList.toggle('active', i === _addrActiveIdx));
     });
 
-    });
+    // ══════════════════════════════════════════════════════════════
+    //  NOTIFICATION ENGINE
+    //  Push: Browser Notification API via Service Worker
+    //  Email: Handled by Google Apps Script time-based trigger
+    //  Schedule: App checks every minute, fires push at 08:00
+    // ══════════════════════════════════════════════════════════════
+
+    // ── REQUEST PUSH PERMISSION ──
+    async function requestNotifPermission() {
+        if (!('Notification' in window)) {
+            await appAlert("Not Supported", "Push notifications are not supported on this browser.", "warning");
+            return;
+        }
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+            updateNotifStatusUI();
+            await appAlert(
+                "Notifications Enabled! 🔔",
+                "You will receive push reminders at 8:00 AM daily for upcoming events and hearings.",
+                "success"
+            );
+        } else if (perm === 'denied') {
+            await appAlert(
+                "Blocked",
+                "Notifications are blocked. Go to your browser settings → click the lock icon in the address bar → set Notifications to Allow.",
+                "warning"
+            );
+        }
+    }
+
+    // ── DATE HELPERS ──
+    function getTodayStr() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function getTomorrowStr() {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function niceDateFull(s) {
+        if (!s) return '';
+        const d = new Date(s + 'T00:00:00');
+        return d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+    }
+
+    // ── GET EVENTS/HEARINGS FOR A SPECIFIC DATE ──
+    function getEventsForDate(dateStr) {
+        return GLOBAL_DATA.filter(e => {
+            const p = e.extendedProps || {};
+            return e.start === dateStr && (p.type === 'event' || p.type === 'hearing');
+        });
+    }
+
+    // ── BUILD READABLE EVENT LIST ──
+    function buildEventSummary(events) {
+        return events.map(e => {
+            const p         = e.extendedProps || {};
+            const typeLabel = p.type === 'hearing' ? '⚖️ Hearing' : '📅 Event';
+            const timeStr   = p.time  ? ` at ${formatTime(p.time)}`  : '';
+            const venueStr  = p.venue ? ` • ${p.venue}` : '';
+            return `${typeLabel}: ${e.title}${timeStr}${venueStr}`;
+        }).join('\n');
+    }
+
+    // ── SEND PUSH NOTIFICATION via Service Worker ──
+    function sendPushNotification(title, body, tag) {
+        if (Notification.permission !== 'granted') return;
+
+        const opts = {
+            body,
+            icon:               './icon-192.png',
+            badge:              './icon-192.png',
+            tag,
+            renotify:           true,
+            requireInteraction: true,
+            vibrate:            [200, 100, 200]
+        };
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready
+                .then(reg  => reg.showNotification(title, opts))
+                .catch(()  => new Notification(title, opts));
+        } else {
+            new Notification(title, opts);
+        }
+    }
+
+    // ── MAIN DAILY CHECK — runs at 08:00 AM ──
+    // ── PARSE EVENT TIME → { hh, mm } or null ──
+    // Returns the hour/minute from an event's time field.
+    // Falls back to 08:00 if no time is set.
+    function parseEventTime(timeStr) {
+        if (!timeStr || timeStr.trim() === '') return { hh: 8, mm: 0 }; // default 8AM
+        const parts = timeStr.split(':');
+        if (parts.length >= 2) {
+            const hh = parseInt(parts[0], 10);
+            const mm = parseInt(parts[1], 10);
+            if (!isNaN(hh) && !isNaN(mm)) return { hh, mm };
+        }
+        return { hh: 8, mm: 0 };
+    }
+
+    // ── CHECK IF NOW MATCHES A TARGET TIME (within the same minute) ──
+    function isTimeNow(hh, mm) {
+        const now = new Date();
+        return now.getHours() === hh && now.getMinutes() === mm;
+    }
+
+    // ── SUBTRACT 1 HOUR from a time object, floor at 00:00 ──
+    function oneHourBefore(hh, mm) {
+        let h = hh - 1;
+        if (h < 0) h = 0;
+        return { hh: h, mm };
+    }
+
+    // ── MAIN SCHEDULER TICK — called every minute ──
+    // Logic:
+    //   For each event/hearing TOMORROW  → notify at the event's own time today
+    //   For each event/hearing TODAY     → notify 1 hour before the event time
+    //   If event has no time             → fall back to 08:00
+    //   Each notification fires only ONCE per event per day (keyed by event id + date)
+    async function runNotificationCheck(forceRun = false) {
+        const today    = getTodayStr();
+        const tomorrow = getTomorrowStr();
+        const now      = new Date();
+        let   fired    = 0;
+
+        // ── TOMORROW'S EVENTS — notify at the event's time, today ──
+        const tmrEvents = getEventsForDate(tomorrow);
+        tmrEvents.forEach(e => {
+            const p       = e.extendedProps || {};
+            const evtTime = parseEventTime(p.time);       // e.g. 14:00
+            const fireAt  = evtTime;                       // fire today at that same time
+
+            const fireKey = `NOTIF_TMR_${e.id}_${today}`;
+            const shouldFire = forceRun || (
+                isTimeNow(fireAt.hh, fireAt.mm) &&
+                !sessionStorage.getItem(fireKey)
+            );
+
+            if (shouldFire) {
+                sessionStorage.setItem(fireKey, '1');
+                const timeLabel = p.time ? ` at ${formatTime(p.time)}` : '';
+                const venueLabel = p.venue ? ` • ${p.venue}` : '';
+                const typeIcon = p.type === 'hearing' ? '⚖️' : '📅';
+                sendPushNotification(
+                    `${typeIcon} Tomorrow: ${e.title}`,
+                    `${e.title}${timeLabel}${venueLabel}
+Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
+                    `notif-tmr-${e.id}-${today}`
+                );
+                fired++;
+                console.log(`[Notif] Tomorrow reminder fired for "${e.title}" at ${fireAt.hh}:${String(fireAt.mm).padStart(2,'0')}`);
+            }
+        });
 
         // ── TODAY'S EVENTS — notify 1 hour before the event time ──
         const todayEvents = getEventsForDate(today);
