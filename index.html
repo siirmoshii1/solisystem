@@ -1003,7 +1003,16 @@
             if(!e.start)return false;
             return e.start.substring(0,4)===yearFilter;
         });
-        data.sort((a,b)=>new Date(b.start)-new Date(a.start));
+        // Always sort by date ascending (Day 1 first → last day)
+        // Secondary sort: by ID number if same date
+        data.sort((a,b) => {
+            const dateDiff = new Date(a.start) - new Date(b.start);
+            if (dateDiff !== 0) return dateDiff;
+            // Same date — sort by ID number (S001 before S003 etc.)
+            const aNum = parseInt(String(a.id).replace(/\D/g,''), 10) || 0;
+            const bNum = parseInt(String(b.id).replace(/\D/g,''), 10) || 0;
+            return aNum - bNum;
+        });
         if(!data.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>No records found.</p></div></td></tr>`;return;}
         data.forEach(e=>{
             const p=e.extendedProps||{};const tr=document.createElement('tr');tr.onclick=()=>openModal(e);
