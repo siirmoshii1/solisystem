@@ -366,6 +366,20 @@
             #calendar { min-height: 260px; }
         }
 
+        /* Address autocomplete suggestion items */
+        .addr-suggestion {
+            padding: 10px 14px;
+            font-size: 12.5px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background .1s;
+            color: #0f172a;
+        }
+        .addr-suggestion:last-child { border-bottom: none; }
+        .addr-suggestion:hover, .addr-suggestion.active { background: #f1f5f9; }
+        .addr-suggestion b { color: #2563eb; }
+        .addr-suggestion .addr-sub { font-size: 10.5px; color: #94a3b8; margin-top: 1px; }
+
         .hidden { display: none !important; }
     </style>
 </head>
@@ -575,8 +589,28 @@
             <div id="group-sol-fields">
                 <div class="fg"><label class="fl">Name, Barangay &amp; Municipality/Organization</label><input type="text" id="title" class="fi" placeholder="e.g. Juan dela Cruz - Brgy 1, Vigan City"></div>
                 <div class="fg"><label class="fl">Date</label><input type="date" id="date" class="fi"></div>
-                <div class="fg"><label class="fl">Purpose / Description</label><input type="text" id="description" class="fi" placeholder="Reason for solicitation..."></div>
-                <div class="fg"><label class="fl">Address</label><input type="text" id="address" class="fi" placeholder="e.g. Brgy 1, Vigan City"></div>
+                <!-- Purpose — combo dropdown -->
+                <div class="fg">
+                    <label class="fl" style="display:flex;align-items:center;justify-content:space-between">
+                        Purpose / Description
+                        <button type="button" onclick="openAddPurpose()" style="font-size:9.5px;font-weight:700;color:#2563eb;background:none;border:none;cursor:pointer;font-family:inherit;padding:0">
+                            <i class="fa-solid fa-plus"></i> Add Option
+                        </button>
+                    </label>
+                    <div style="position:relative">
+                        <select id="description-sel" class="fsel" onchange="onPurposeSelect(this)" style="margin-bottom:0">
+                            <option value="">— Select or type below —</option>
+                        </select>
+                        <input type="text" id="description" class="fi" placeholder="Or type a custom purpose..." style="margin-top:6px;display:none">
+                    </div>
+                </div>
+
+                <!-- Address — predictive autocomplete -->
+                <div class="fg" style="position:relative">
+                    <label class="fl">Address</label>
+                    <input type="text" id="address" class="fi" placeholder="Type barangay or municipality..." autocomplete="off" oninput="onAddressInput(this)" onblur="setTimeout(()=>hideAddressSuggestions(),200)">
+                    <div id="address-suggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 10px 10px;max-height:180px;overflow-y:auto;z-index:500;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
+                </div>
                 <div class="fg" style="padding-bottom:14px;border-bottom:1px solid #f1f5f9;margin-bottom:14px"><label class="fl">Contact Number</label><input type="tel" id="contact" class="fi" placeholder="09XXXXXXXXX"></div>
                 <div id="processing-wrapper">
                     <button type="button" id="btn-show-processing" class="status-trigger" onclick="revealProcessing()"><i class="fa-solid fa-lock-open"></i> Update Status / Release Funds</button>
@@ -626,18 +660,59 @@
 <div id="dashboard-modal" class="modal-wrap">
     <div class="modal-box" style="max-width:660px">
         <div class="modal-handle"></div>
-        <div class="modal-head"><span class="modal-title"><i class="fa-solid fa-chart-pie" style="color:#f59e0b;margin-right:7px"></i>Morning Briefing</span><button class="modal-close" onclick="closeDashboard()"><i class="fa-solid fa-times"></i></button></div>
+        <div class="modal-head">
+            <span class="modal-title"><i class="fa-solid fa-chart-pie" style="color:#f59e0b;margin-right:7px"></i>Morning Briefing</span>
+            <button class="modal-close" onclick="closeDashboard()"><i class="fa-solid fa-times"></i></button>
+        </div>
         <div class="modal-body">
-            <div class="dash-total"><div class="dash-total-label">Total Cash Released — All Time</div><div class="dash-total-val" id="dash-total-amount">₱0</div></div>
+
+            <!-- Month + Year filter row -->
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+                <span style="font-size:11px;font-weight:700;color:#64748b;flex-shrink:0">Filter:</span>
+                <select id="dash-month" class="filter-sel" onchange="refreshDashboard()" style="font-size:11.5px;padding:6px 22px 6px 10px;flex:1;min-width:120px">
+                    <option value="all">All Months</option>
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5">May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                <select id="dash-year" class="filter-sel" onchange="refreshDashboard()" style="font-size:11.5px;padding:6px 22px 6px 10px;flex:1;min-width:90px">
+                    <option value="all">All Years</option>
+                </select>
+                <button type="button" onclick="resetDashFilters()" class="fbtn fbtn-ghost" style="font-size:11px;padding:6px 10px;flex-shrink:0;border:1px solid #e2e8f0">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </button>
+            </div>
+
+            <!-- Total cash released card -->
+            <div class="dash-total">
+                <div class="dash-total-label" id="dash-total-label">Total Cash Released — All Time</div>
+                <div class="dash-total-val" id="dash-total-amount">₱0</div>
+            </div>
+
+            <!-- Stats grid -->
             <div class="dash-grid">
-                <div class="dash-card"><div class="dash-val" id="dash-pending" style="color:#b45309">0</div><div class="dash-lbl">Pending</div></div>
-                <div class="dash-card"><div class="dash-val" id="dash-done" style="color:#15803d">0</div><div class="dash-lbl">Released</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-pending"  style="color:#b45309">0</div><div class="dash-lbl">Pending</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-done"     style="color:#15803d">0</div><div class="dash-lbl">Released</div></div>
                 <div class="dash-card"><div class="dash-val" id="dash-declined" style="color:#b91c1c">0</div><div class="dash-lbl">Declined</div></div>
-                <div class="dash-card"><div class="dash-val" id="dash-events" style="color:#1d4ed8">0</div><div class="dash-lbl">Events</div></div>
+                <div class="dash-card"><div class="dash-val" id="dash-events"   style="color:#1d4ed8">0</div><div class="dash-lbl">Events</div></div>
                 <div class="dash-card"><div class="dash-val" id="dash-hearings" style="color:#15803d">0</div><div class="dash-lbl">Hearings</div></div>
             </div>
+
+            <!-- Sol count breakdown -->
+            <div id="dash-sol-total" style="margin-top:10px;text-align:center;font-size:11.5px;color:#64748b;font-weight:600"></div>
         </div>
-        <div class="modal-foot" style="justify-content:flex-end"><button class="fbtn fbtn-primary" onclick="closeDashboard()" style="padding:10px 28px">Enter Workspace</button></div>
+        <div class="modal-foot" style="justify-content:flex-end">
+            <button class="fbtn fbtn-primary" onclick="closeDashboard()" style="padding:10px 28px">Enter Workspace</button>
+        </div>
     </div>
 </div>
 
@@ -1013,7 +1088,7 @@
         initCalendar();
         renderSchedulePanel();
         updateCounts();
-        populateYearFilter();
+        populateYearFilter(); populateDashYears();
         setCurrentMonth();
         renderTable('solicitation', '', 'all', getMonthFilter(), getYearFilter());
         startNotificationScheduler();
@@ -1025,25 +1100,114 @@
     });
 
     // ── DASHBOARD ──
-    function showDashboard(){
-        let pending=0,done=0,declined=0,events=0,hearings=0,total=0;
-        GLOBAL_DATA.forEach(e=>{
-            const p=e.extendedProps||{};
-            if(p.type==='solicitation'){
-                if(p.status==='done'){done++;total+=parseFloat(p.amount||0);}
-                else if(p.status==='pending')pending++;
-                else declined++;
-            } else if(p.type==='event') events++;
-            else if(p.type==='hearing') hearings++;
+    // ── Populate year dropdown in dashboard from actual data ──
+    function populateDashYears() {
+        const sel = document.getElementById('dash-year');
+        if (!sel) return;
+        const years = [...new Set(
+            GLOBAL_DATA.map(e => e.start ? e.start.substring(0,4) : null).filter(Boolean)
+        )].sort((a,b) => b - a);
+        sel.innerHTML = '<option value="all">All Years</option>';
+        years.forEach(y => {
+            const opt = document.createElement('option');
+            opt.value = y; opt.textContent = y;
+            sel.appendChild(opt);
         });
-        document.getElementById('dash-pending').innerText=pending;
-        document.getElementById('dash-done').innerText=done;
-        document.getElementById('dash-declined').innerText=declined;
-        document.getElementById('dash-events').innerText=events;
-        document.getElementById('dash-hearings').innerText=hearings;
-        document.getElementById('dash-total-amount').innerText='₱'+total.toLocaleString('en-US');
+    }
+
+    // ── Core: compute + render dashboard stats for given month/year ──
+    function computeDashboard(monthFilter, yearFilter) {
+        let pending=0, done=0, declined=0, events=0, hearings=0, total=0;
+        const monthNames = ['','January','February','March','April','May',
+                            'June','July','August','September','October','November','December'];
+
+        GLOBAL_DATA.forEach(e => {
+            const p    = e.extendedProps || {};
+            const date = e.start || '';
+
+            // Apply month filter
+            if (monthFilter !== 'all') {
+                const m = parseInt(date.substring(5,7), 10);
+                if (String(m) !== monthFilter) return;
+            }
+            // Apply year filter
+            if (yearFilter !== 'all') {
+                if (date.substring(0,4) !== yearFilter) return;
+            }
+
+            if (p.type === 'solicitation') {
+                if      (p.status === 'done')    { done++;    total += parseFloat(p.amount || 0); }
+                else if (p.status === 'pending')   pending++;
+                else                               declined++;
+            } else if (p.type === 'event')   events++;
+            else if (p.type === 'hearing') hearings++;
+        });
+
+        // Update stats
+        const s = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+        s('dash-pending',  pending);
+        s('dash-done',     done);
+        s('dash-declined', declined);
+        s('dash-events',   events);
+        s('dash-hearings', hearings);
+        s('dash-total-amount', '₱' + total.toLocaleString('en-US', { minimumFractionDigits: 0 }));
+
+        // Update label
+        const labelEl = document.getElementById('dash-total-label');
+        if (labelEl) {
+            if (monthFilter === 'all' && yearFilter === 'all') {
+                labelEl.innerText = 'Total Cash Released — All Time';
+            } else {
+                const mLabel = monthFilter !== 'all' ? monthNames[parseInt(monthFilter)] : '';
+                const yLabel = yearFilter  !== 'all' ? yearFilter : '';
+                labelEl.innerText = 'Total Cash Released — ' + [mLabel, yLabel].filter(Boolean).join(' ');
+            }
+        }
+
+        // Summary line
+        const solTotal = pending + done + declined;
+        const solEl = document.getElementById('dash-sol-total');
+        if (solEl) {
+            solEl.innerText = solTotal > 0
+                ? `${solTotal} solicitation${solTotal !== 1 ? 's' : ''} total  •  ${events} event${events !== 1 ? 's' : ''}  •  ${hearings} hearing${hearings !== 1 ? 's' : ''}`
+                : 'No records found for the selected period.';
+        }
+    }
+
+    function showDashboard() {
+        populateDashYears();
+        // Default: current month + current year
+        const now = new Date();
+        const mSel = document.getElementById('dash-month');
+        const ySel = document.getElementById('dash-year');
+        if (mSel) mSel.value = String(now.getMonth() + 1);
+        if (ySel) {
+            const cy = String(now.getFullYear());
+            // Only set current year if it exists in options
+            const hasYear = [...(ySel.options || [])].some(o => o.value === cy);
+            ySel.value = hasYear ? cy : 'all';
+        }
+        computeDashboard(
+            mSel ? mSel.value : 'all',
+            ySel ? ySel.value : 'all'
+        );
         showModal('dashboard-modal');
     }
+
+    function refreshDashboard() {
+        const m = document.getElementById('dash-month')?.value || 'all';
+        const y = document.getElementById('dash-year')?.value  || 'all';
+        computeDashboard(m, y);
+    }
+
+    function resetDashFilters() {
+        const mSel = document.getElementById('dash-month');
+        const ySel = document.getElementById('dash-year');
+        if (mSel) mSel.value = 'all';
+        if (ySel) ySel.value = 'all';
+        computeDashboard('all', 'all');
+    }
+
     function closeDashboard() { hideModal('dashboard-modal'); }
 
     // ── SAVE ──
@@ -1320,7 +1484,7 @@ Types: ${typeLabels}`,
         GLOBAL_DATA = [...kept, ...restored];
 
         saveDataLocally();
-        populateYearFilter();
+        populateYearFilter(); populateDashYears();
         _cloudData = []; // clear temp
 
         const typeLabels = selectedTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1) + 's').join(', ');
@@ -1332,7 +1496,7 @@ Types: ${typeLabels}`,
         );
     }
     function downloadBackup(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(GLOBAL_DATA));a.download="solisystem_backup_"+getLocalDate()+".json";document.body.appendChild(a);a.click();a.remove();}
-    function restoreBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){GLOBAL_DATA=sanitizeData(d);saveDataLocally();populateYearFilter();await appAlert("Restored","Backup loaded.","success");}else await appAlert("Invalid File","Not a valid backup.","error");}catch{await appAlert("Error","Could not read file.","error");}};r.readAsText(file);}
+    function restoreBackup(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=async ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){GLOBAL_DATA=sanitizeData(d);saveDataLocally();populateYearFilter(); populateDashYears();await appAlert("Restored","Backup loaded.","success");}else await appAlert("Invalid File","Not a valid backup.","error");}catch{await appAlert("Error","Could not read file.","error");}};r.readAsText(file);}
     async function hardReset(){const ok=await appConfirm("Wipe Data","Delete ALL local data permanently?","Wipe","error");if(ok){localStorage.removeItem(STORE_KEY);location.reload();}}
 
     // ── SIDEBAR ──
@@ -1486,11 +1650,11 @@ Types: ${typeLabels}`,
     function renderSchedulePanel(){const list=document.getElementById('upcoming-list');list.innerHTML='';const today=getLocalDate();const upcoming=GLOBAL_DATA.filter(e=>e.start>=today&&(e.extendedProps?.type==='event'||e.extendedProps?.type==='hearing')).sort((a,b)=>new Date(a.start)-new Date(b.start)).slice(0,10);if(!upcoming.length){list.innerHTML='<p style="text-align:center;font-size:12px;color:#94a3b8;padding:24px 0;font-style:italic">No upcoming events or hearings.</p>';return;}upcoming.forEach(e=>{const p=e.extendedProps||{};const days=Math.ceil((new Date(e.start)-new Date(today))/86400000);const cls=days<=1?'urgent':days<=2?'soon':(p.type==='hearing'?'is-hearing':'is-event');const alert=days<=1?'<i class="fa-solid fa-circle-exclamation" style="color:#ef4444"></i>':days===2?'<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b"></i>':'';const typeBadge=p.type==='hearing'?`<span class="badge badge-hearing" style="font-size:9px;padding:1px 6px">Hearing</span>`:`<span class="badge badge-event" style="font-size:9px;padding:1px 6px">Event</span>`;const venue=p.venue?`<div class="sched-venue"><i class="fa-solid fa-location-dot"></i>${p.venue}</div>`:'';const time=p.time?formatTime(p.time)+' · ':'';const div=document.createElement('div');div.className=`sched-item ${cls}`;div.onclick=()=>{const rec=GLOBAL_DATA.find(x=>x.id===e.id);if(rec)openModal(rec);};div.innerHTML=`<div class="sched-meta"><span>${time}${formatDate(e.start)}</span>${alert}</div><div class="sched-name">${e.title} ${typeBadge}</div>${venue}`;list.appendChild(div);});}
 
     // ── MODAL OPEN/CLOSE ──
-    function openModal(event=null,dateStr=null){document.getElementById('main-form').reset();const del=document.getElementById('btn-delete'),prnt=document.getElementById('btn-print');if(event){const raw=event.extendedProps?event:(GLOBAL_DATA.find(x=>x.id==event.id)||event);const p=raw.extendedProps||{};const dVal=cleanDate(raw.startStr||raw.start||getLocalDate());const type=p.type||'solicitation';document.getElementById('entry-id').value=raw.id;document.getElementById('modal-title-text').innerText=`Edit ${raw.id}`;switchMode(type);if(type==='solicitation'){document.getElementById('title').value=raw.title||'';document.getElementById('date').value=dVal;document.getElementById('description').value=p.description||'';document.getElementById('address').value=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';document.getElementById('contact').value=p.contact||'';document.getElementById('status').value=p.status||'pending';document.getElementById('amount').value=p.amount||'';document.getElementById('person-claimed').value=p.personClaimed||'';document.getElementById('date-given').value=cleanDate(p.dateGiven);document.getElementById('released-by').value=p.releasedBy||'';toggleAuditFields();prnt.style.display='';}else{document.getElementById('evt-title').value=raw.title||'';document.getElementById('evt-date').value=dVal;document.getElementById('time').value=p.time?cleanTime(p.time):'';document.getElementById('venue').value=p.venue||'';document.getElementById('evt-description').value=p.description||'';prnt.style.display='none';}del.style.display='';}else{document.getElementById('entry-id').value='';document.getElementById('modal-title-text').innerText="New Record";const today=dateStr||getLocalDate();document.getElementById('date').value=today;document.getElementById('evt-date').value=today;document.getElementById('time').value=getLocalTime();document.getElementById('address').value='';switchMode(getActiveType());toggleAuditFields();del.style.display='none';prnt.style.display='none';}showModal('entry-modal');}
+    function openModal(event=null,dateStr=null){document.getElementById('main-form').reset();const del=document.getElementById('btn-delete'),prnt=document.getElementById('btn-print');if(event){const raw=event.extendedProps?event:(GLOBAL_DATA.find(x=>x.id==event.id)||event);const p=raw.extendedProps||{};const dVal=cleanDate(raw.startStr||raw.start||getLocalDate());const type=p.type||'solicitation';document.getElementById('entry-id').value=raw.id;document.getElementById('modal-title-text').innerText=`Edit ${raw.id}`;switchMode(type);if(type==='solicitation'){document.getElementById('title').value=raw.title||'';document.getElementById('date').value=dVal;document.getElementById('description').value=p.description||'';initPurposeField(p.description||'');document.getElementById('address').value=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';document.getElementById('contact').value=p.contact||'';document.getElementById('status').value=p.status||'pending';document.getElementById('amount').value=p.amount||'';document.getElementById('person-claimed').value=p.personClaimed||'';document.getElementById('date-given').value=cleanDate(p.dateGiven);document.getElementById('released-by').value=p.releasedBy||'';toggleAuditFields();prnt.style.display='';}else{document.getElementById('evt-title').value=raw.title||'';document.getElementById('evt-date').value=dVal;document.getElementById('time').value=p.time?cleanTime(p.time):'';document.getElementById('venue').value=p.venue||'';document.getElementById('evt-description').value=p.description||'';prnt.style.display='none';}del.style.display='';}else{document.getElementById('entry-id').value='';document.getElementById('modal-title-text').innerText="New Record";const today=dateStr||getLocalDate();document.getElementById('date').value=today;document.getElementById('evt-date').value=today;document.getElementById('time').value=getLocalTime();document.getElementById('address').value='';document.getElementById('description').value='';switchMode(getActiveType());toggleAuditFields();del.style.display='none';prnt.style.display='none';}showModal('entry-modal');}
     function closeModal(){hideModal('entry-modal');}
 
     // ── MODE SWITCH ──
-    function switchMode(mode){document.getElementById('entry-type').value=mode;const isSol=mode==='solicitation',isEvtHrg=mode==='event'||mode==='hearing';document.getElementById('group-sol-fields').style.display=isSol?'':'none';document.getElementById('group-evt-fields').style.display=isEvtHrg?'':'none';if(isSol){const isNew=!document.getElementById('entry-id').value;document.getElementById('processing-fields').style.display=isNew?'none':'';document.getElementById('btn-show-processing').style.display=isNew?'':'none';}const etl=document.getElementById('label-evt-title'),edl=document.getElementById('label-evt-desc');if(etl)etl.innerText=mode==='hearing'?'Hearing Title':'Event Name';if(edl)edl.innerText=mode==='hearing'?'Notes / Description':'Event Note';['solicitation','event','hearing'].forEach(m=>{const ids={solicitation:'btn-solicitation',event:'btn-event',hearing:'btn-hearing'};document.getElementById(ids[m]).classList.toggle('active',m===mode);});}
+    function switchMode(mode){document.getElementById('entry-type').value=mode;const isSol=mode==='solicitation',isEvtHrg=mode==='event'||mode==='hearing';document.getElementById('group-sol-fields').style.display=isSol?'':'none';document.getElementById('group-evt-fields').style.display=isEvtHrg?'':'none';if(isSol){const isNew=!document.getElementById('entry-id').value;document.getElementById('processing-fields').style.display=isNew?'none':'';document.getElementById('btn-show-processing').style.display=isNew?'':'none';if(typeof initPurposeField==='function'){initPurposeField(document.getElementById('description')?.value||'');}}const etl=document.getElementById('label-evt-title'),edl=document.getElementById('label-evt-desc');if(etl)etl.innerText=mode==='hearing'?'Hearing Title':'Event Name';if(edl)edl.innerText=mode==='hearing'?'Notes / Description':'Event Note';['solicitation','event','hearing'].forEach(m=>{const ids={solicitation:'btn-solicitation',event:'btn-event',hearing:'btn-hearing'};document.getElementById(ids[m]).classList.toggle('active',m===mode);});}
     function revealProcessing(){document.getElementById('processing-fields').style.display='';document.getElementById('btn-show-processing').style.display='none';}
     function toggleAuditFields(){const s=document.getElementById('status').value;const sec=document.getElementById('audit-section');sec.style.display=s==='done'?'':'none';if(s==='done'){if(!document.getElementById('date-given').value)document.getElementById('date-given').value=getLocalDate();if(!document.getElementById('person-claimed').value)document.getElementById('person-claimed').value=document.getElementById('title').value;}}
 
@@ -1499,162 +1663,906 @@ Types: ${typeLabels}`,
 
     if('serviceWorker'in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 
-    // ══════════════════════════════════════════════════════════════
-    //  NOTIFICATION ENGINE
-    //  Push: Browser Notification API via Service Worker
-    //  Email: Handled by Google Apps Script time-based trigger
-    //  Schedule: App checks every minute, fires push at 08:00
-    // ══════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════════
+    //  PURPOSE DROPDOWN — combo select + custom input + add new
+    // ══════════════════════════════════════════════════════════
 
-    // ── REQUEST PUSH PERMISSION ──
-    async function requestNotifPermission() {
-        if (!('Notification' in window)) {
-            await appAlert("Not Supported", "Push notifications are not supported on this browser.", "warning");
+    const PURPOSE_KEY = 'SOLISYS_PURPOSES';
+
+    const DEFAULT_PURPOSES = [
+        'Financial Assistance',
+        'Medical Assistance',
+        'Educational Assistance',
+        'Burial Assistance',
+        'Livelihood Assistance',
+        'Relief Assistance',
+        'Transportation Assistance',
+        'Infrastructure Support',
+        'Sports & Cultural Support',
+        'Legal Assistance',
+        'Food Assistance',
+    ];
+
+    function loadPurposes() {
+        try {
+            const saved = localStorage.getItem(PURPOSE_KEY);
+            return saved ? JSON.parse(saved) : [...DEFAULT_PURPOSES];
+        } catch { return [...DEFAULT_PURPOSES]; }
+    }
+
+    function savePurposes(list) {
+        localStorage.setItem(PURPOSE_KEY, JSON.stringify(list));
+    }
+
+    function populatePurposeDropdown(selectedValue) {
+        const sel = document.getElementById('description-sel');
+        if (!sel) return;
+        const purposes = loadPurposes();
+        sel.innerHTML = '<option value="">— Select a purpose —</option>';
+        purposes.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.textContent = p;
+            if (p === selectedValue) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        const custom = document.createElement('option');
+        custom.value = '__custom__';
+        custom.textContent = '✏️ Type custom...';
+        sel.appendChild(custom);
+        const delOpt = document.createElement('option');
+        delOpt.value = '__delete__';
+        delOpt.textContent = '🗑️ Delete an option...';
+        sel.appendChild(delOpt);
+    }
+
+    async function deletePurposeOption() {
+        const purposes = loadPurposes();
+        if (purposes.length === 0) {
+            await appAlert('Empty', 'No custom options to delete.', 'info');
             return;
         }
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-            updateNotifStatusUI();
-            await appAlert(
-                "Notifications Enabled! 🔔",
-                "You will receive push reminders at 8:00 AM daily for upcoming events and hearings.",
-                "success"
-            );
-        } else if (perm === 'denied') {
-            await appAlert(
-                "Blocked",
-                "Notifications are blocked. Go to your browser settings → click the lock icon in the address bar → set Notifications to Allow.",
-                "warning"
-            );
-        }
+        // Show a secondary select to pick which to delete
+        const name = await promptSelect(
+            'Delete Purpose Option',
+            'Select the option to remove from the dropdown:',
+            purposes
+        );
+        if (!name) return;
+        const idx = purposes.indexOf(name);
+        if (idx === -1) return;
+        const ok = await appConfirm(
+            'Delete Option',
+            `Remove "${name}" from the purpose list?`,
+            'Delete', 'error'
+        );
+        if (!ok) return;
+        purposes.splice(idx, 1);
+        savePurposes(purposes);
+        // Reset field
+        const sel = document.getElementById('description-sel');
+        const inp = document.getElementById('description');
+        if (inp && inp.value === name) inp.value = '';
+        populatePurposeDropdown('');
+        if (sel) sel.value = '';
+        await appAlert('Deleted', `"${name}" has been removed.`, 'success');
     }
 
-    // ── DATE HELPERS ──
-    function getTodayStr() {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    function getTomorrowStr() {
-        const d = new Date();
-        d.setDate(d.getDate() + 1);
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    function niceDateFull(s) {
-        if (!s) return '';
-        const d = new Date(s + 'T00:00:00');
-        return d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-    }
-
-    // ── GET EVENTS/HEARINGS FOR A SPECIFIC DATE ──
-    function getEventsForDate(dateStr) {
-        return GLOBAL_DATA.filter(e => {
-            const p = e.extendedProps || {};
-            return e.start === dateStr && (p.type === 'event' || p.type === 'hearing');
+    // Simple select-from-list prompt using app-dialog
+    function promptSelect(title, message, options) {
+        return new Promise(resolve => {
+            _dlg(title, message, 'warning');
+            const optHtml = options.map((o,i) =>
+                `<option value="${i}">${o}</option>`
+            ).join('');
+            document.getElementById('dlg-btns').innerHTML = `
+                <div style="width:100%;padding:0 16px 12px;display:flex;flex-direction:column;gap:8px">
+                    <select id="prompt-sel" class="fsel" style="font-size:13px">
+                        <option value="">— Select —</option>
+                        ${optHtml}
+                    </select>
+                    <div style="display:flex;gap:8px">
+                        <button class="dlg-btn cancel" id="psel-cancel" style="flex:1;padding:10px;border:1px solid #f1f5f9;border-radius:8px">Cancel</button>
+                        <button class="dlg-btn confirm" id="psel-ok" style="flex:1;padding:10px;border:1px solid #fecaca;border-radius:8px;background:#fef2f2;color:#dc2626">Delete</button>
+                    </div>
+                </div>`;
+            document.getElementById('app-dialog').classList.add('show');
+            document.getElementById('psel-cancel').onclick = () => {
+                document.getElementById('app-dialog').classList.remove('show');
+                resolve(null);
+            };
+            document.getElementById('psel-ok').onclick = () => {
+                const sel = document.getElementById('prompt-sel');
+                const idx = parseInt(sel?.value);
+                document.getElementById('app-dialog').classList.remove('show');
+                resolve(!isNaN(idx) && options[idx] ? options[idx] : null);
+            };
         });
     }
 
-    // ── BUILD READABLE EVENT LIST ──
-    function buildEventSummary(events) {
-        return events.map(e => {
-            const p         = e.extendedProps || {};
-            const typeLabel = p.type === 'hearing' ? '⚖️ Hearing' : '📅 Event';
-            const timeStr   = p.time  ? ` at ${formatTime(p.time)}`  : '';
-            const venueStr  = p.venue ? ` • ${p.venue}` : '';
-            return `${typeLabel}: ${e.title}${timeStr}${venueStr}`;
-        }).join('\n');
-    }
-
-    // ── SEND PUSH NOTIFICATION via Service Worker ──
-    function sendPushNotification(title, body, tag) {
-        if (Notification.permission !== 'granted') return;
-
-        const opts = {
-            body,
-            icon:               './icon-192.png',
-            badge:              './icon-192.png',
-            tag,
-            renotify:           true,
-            requireInteraction: true,
-            vibrate:            [200, 100, 200]
-        };
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.ready
-                .then(reg  => reg.showNotification(title, opts))
-                .catch(()  => new Notification(title, opts));
+    function onPurposeSelect(sel) {
+        const inp = document.getElementById('description');
+        if (!inp) return;
+        if (sel.value === '__delete__') {
+            sel.value = inp.value || '';
+            deletePurposeOption();
+        } else if (sel.value === '__custom__') {
+            inp.style.display = '';
+            inp.value = '';
+            inp.focus();
+            sel.value = '';
+        } else if (sel.value) {
+            inp.style.display = 'none';
+            inp.value = sel.value;
         } else {
-            new Notification(title, opts);
+            inp.style.display = 'none';
+            inp.value = '';
         }
     }
 
-    // ── MAIN DAILY CHECK — runs at 08:00 AM ──
-    // ── PARSE EVENT TIME → { hh, mm } or null ──
-    // Returns the hour/minute from an event's time field.
-    // Falls back to 08:00 if no time is set.
-    function parseEventTime(timeStr) {
-        if (!timeStr || timeStr.trim() === '') return { hh: 8, mm: 0 }; // default 8AM
-        const parts = timeStr.split(':');
-        if (parts.length >= 2) {
-            const hh = parseInt(parts[0], 10);
-            const mm = parseInt(parts[1], 10);
-            if (!isNaN(hh) && !isNaN(mm)) return { hh, mm };
+    async function openAddPurpose() {
+        // Simple inline prompt using our existing appAlert pattern
+        // We'll use a small inline input dialog
+        const existing = loadPurposes();
+        // Show a mini modal via appConfirm-style
+        const name = await promptInput(
+            'Add New Purpose',
+            'Enter the new purpose option to add to the dropdown:',
+            'e.g. Scholarship Assistance'
+        );
+        if (!name || !name.trim()) return;
+        const trimmed = name.trim();
+        if (existing.includes(trimmed)) {
+            await appAlert('Already Exists', `"${trimmed}" is already in the list.`, 'info');
+            return;
         }
-        return { hh: 8, mm: 0 };
+        existing.push(trimmed);
+        savePurposes(existing);
+        populatePurposeDropdown(trimmed);
+        // Auto-select the new option
+        const sel = document.getElementById('description-sel');
+        if (sel) { sel.value = trimmed; onPurposeSelect(sel); }
+        await appAlert('Added!', `"${trimmed}" has been added to the purpose list.`, 'success');
     }
 
-    // ── CHECK IF NOW MATCHES A TARGET TIME (within the same minute) ──
-    function isTimeNow(hh, mm) {
-        const now = new Date();
-        return now.getHours() === hh && now.getMinutes() === mm;
-    }
-
-    // ── SUBTRACT 1 HOUR from a time object, floor at 00:00 ──
-    function oneHourBefore(hh, mm) {
-        let h = hh - 1;
-        if (h < 0) h = 0;
-        return { hh: h, mm };
-    }
-
-    // ── MAIN SCHEDULER TICK — called every minute ──
-    // Logic:
-    //   For each event/hearing TOMORROW  → notify at the event's own time today
-    //   For each event/hearing TODAY     → notify 1 hour before the event time
-    //   If event has no time             → fall back to 08:00
-    //   Each notification fires only ONCE per event per day (keyed by event id + date)
-    async function runNotificationCheck(forceRun = false) {
-        const today    = getTodayStr();
-        const tomorrow = getTomorrowStr();
-        const now      = new Date();
-        let   fired    = 0;
-
-        // ── TOMORROW'S EVENTS — notify at the event's time, today ──
-        const tmrEvents = getEventsForDate(tomorrow);
-        tmrEvents.forEach(e => {
-            const p       = e.extendedProps || {};
-            const evtTime = parseEventTime(p.time);       // e.g. 14:00
-            const fireAt  = evtTime;                       // fire today at that same time
-
-            const fireKey = `NOTIF_TMR_${e.id}_${today}`;
-            const shouldFire = forceRun || (
-                isTimeNow(fireAt.hh, fireAt.mm) &&
-                !sessionStorage.getItem(fireKey)
-            );
-
-            if (shouldFire) {
-                sessionStorage.setItem(fireKey, '1');
-                const timeLabel = p.time ? ` at ${formatTime(p.time)}` : '';
-                const venueLabel = p.venue ? ` • ${p.venue}` : '';
-                const typeIcon = p.type === 'hearing' ? '⚖️' : '📅';
-                sendPushNotification(
-                    `${typeIcon} Tomorrow: ${e.title}`,
-                    `${e.title}${timeLabel}${venueLabel}
-Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
-                    `notif-tmr-${e.id}-${today}`
-                );
-                fired++;
-                console.log(`[Notif] Tomorrow reminder fired for "${e.title}" at ${fireAt.hh}:${String(fireAt.mm).padStart(2,'0')}`);
-            }
+    // Simple text prompt modal (reuses app-dialog)
+    function promptInput(title, message, placeholder) {
+        return new Promise(resolve => {
+            _dlg(title, message, 'info');
+            document.getElementById('dlg-btns').innerHTML = `
+                <div style="width:100%;padding:0 16px 12px;display:flex;flex-direction:column;gap:8px">
+                    <input type="text" id="prompt-input" class="fi" placeholder="${placeholder}" style="font-size:13px"
+                           onkeydown="if(event.key==='Enter'){document.getElementById('prompt-ok').click()}">
+                    <div style="display:flex;gap:8px">
+                        <button class="dlg-btn cancel" id="prompt-cancel" style="flex:1;padding:10px;border:1px solid #f1f5f9;border-radius:8px">Cancel</button>
+                        <button class="dlg-btn confirm" id="prompt-ok" style="flex:1;padding:10px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff">Add</button>
+                    </div>
+                </div>`;
+            document.getElementById('app-dialog').classList.add('show');
+            setTimeout(() => document.getElementById('prompt-input')?.focus(), 100);
+            document.getElementById('prompt-cancel').onclick = () => {
+                document.getElementById('app-dialog').classList.remove('show');
+                resolve(null);
+            };
+            document.getElementById('prompt-ok').onclick = () => {
+                const val = document.getElementById('prompt-input')?.value || '';
+                document.getElementById('app-dialog').classList.remove('show');
+                resolve(val);
+            };
         });
+    }
+
+    // Call on modal open — populate dropdown and sync description field
+    function initPurposeField(currentValue) {
+        populatePurposeDropdown(currentValue);
+        const sel = document.getElementById('description-sel');
+        const inp = document.getElementById('description');
+        if (!sel || !inp) return;
+        if (currentValue) {
+            const purposes = loadPurposes();
+            if (purposes.includes(currentValue)) {
+                // Known option — show in dropdown
+                sel.value = currentValue;
+                inp.style.display = 'none';
+                inp.value = currentValue;
+            } else if (currentValue) {
+                // Custom value — show text input
+                sel.value = '';
+                inp.style.display = '';
+                inp.value = currentValue;
+            }
+        } else {
+            sel.value = '';
+            inp.style.display = 'none';
+            inp.value = '';
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  ADDRESS AUTOCOMPLETE — Complete Ilocos Sur barangays (599 entries)
+    //  Format: [barangay, municipality]
+    // ══════════════════════════════════════════════════════════
+
+    const ILOCOS_SUR_ADDRESSES = [
+        ["Abaccan", "Sigay"],
+        ["Abaya", "Galimuyod"],
+        ["Abuor", "Narvacan"],
+        ["Ag-agrao", "Santa Maria"],
+        ["Ag-aguman", "Tagudin"],
+        ["Aggay", "Bantay"],
+        ["Aguing", "Sinait"],
+        ["Al-aludig", "Santiago"],
+        ["Alangan", "Magsingal"],
+        ["Alfonso (Tangaoan)", "Gregorio del Pilar"],
+        ["Alilem", "Ilocos Sur"],
+        ["Alilem Daya (Poblacion)", "Alilem"],
+        ["Alinaay", "Cabugao"],
+        ["Alincaoeg", "Santa Lucia"],
+        ["Allangigan Primero", "Candon City"],
+        ["Allangigan Segundo", "Candon City"],
+        ["Aluling", "Cervantes"],
+        ["Amarao", "Santa Cruz"],
+        ["Ambalayat", "Tagudin"],
+        ["Ambucao", "Santiago"],
+        ["Ambugat", "Burgos"],
+        ["Ambulogan", "Narvacan"],
+        ["Amguid", "Candon City"],
+        ["Amilongan", "Alilem"],
+        ["Ampandula", "Santa"],
+        ["Ampuagan", "Santa Maria"],
+        ["An-annam", "Bantay"],
+        ["Anaao", "Alilem"],
+        ["Angkileng", "Santa Lucia"],
+        ["Anonang Mayor", "Caoayan"],
+        ["Anonang Menor", "Caoayan"],
+        ["Ansad", "San Esteban"],
+        ["Apang", "Alilem"],
+        ["Apatot", "San Esteban"],
+        ["Apaya", "Alilem"],
+        ["Aquib", "Narvacan"],
+        ["Aragan", "Cabugao"],
+        ["Arangin", "Santa Lucia"],
+        ["Arnap", "Cabugao"],
+        ["Arnap", "San Ildefonso"],
+        ["Asilang", "San Juan (Lapog)"],
+        ["Atabay", "Salcedo (Baugen)"],
+        ["Ayudante", "Candon City"],
+        ["Ayusan (Poblacion)", "Santa Lucia"],
+        ["Ayusan Norte", "Vigan City"],
+        ["Ayusan Sur", "Vigan City"],
+        ["Baballasioan", "Santa Maria"],
+        ["Babayoan", "Santa Cruz"],
+        ["Bacar", "Magsingal"],
+        ["Baclig (Poblacion)", "Cabugao"],
+        ["Bacsayan", "Santa Cruz"],
+        ["Bacsil", "San Juan (Lapog)"],
+        ["Bagani Camposanto", "Candon City"],
+        ["Bagani Gabor", "Candon City"],
+        ["Bagani Tocgo", "Candon City"],
+        ["Bagani Ubbog", "Candon City"],
+        ["Bagar", "Candon City"],
+        ["Bagbagotot", "Banayoyo"],
+        ["Baggoc", "Caoayan"],
+        ["Bahet", "San Ildefonso"],
+        ["Balaleng", "Bantay"],
+        ["Balaweg", "Nagbukel"],
+        ["Balbalayang (Poblacion)", "Sugpon"],
+        ["Balidbid", "Salcedo (Baugen)"],
+        ["Balingaoan", "Candon City"],
+        ["Baliw", "San Juan (Lapog)"],
+        ["Baliw", "Sinait"],
+        ["Baliw Daya", "Santa Maria"],
+        ["Baliw Laud", "Santa Maria"],
+        ["Ballaigui (Poblacion)", "Sinait"],
+        ["Baluarte", "Salcedo (Baugen)"],
+        ["Balugang", "Burgos"],
+        ["Banaoang", "Bantay"],
+        ["Banaoang", "Santa"],
+        ["Banay", "Santa Cruz"],
+        ["Banayoyo", "Ilocos Sur"],
+        ["Banbanaal", "Banayoyo"],
+        ["Banbanaba", "Santa Lucia"],
+        ["Bandril", "Nagbukel"],
+        ["Banga", "Sugpon"],
+        ["Bangbangar", "Burgos"],
+        ["Banglayan", "Narvacan"],
+        ["Bani", "Santa Lucia"],
+        ["Bannuar (Poblacion)", "San Juan (Lapog)"],
+        ["Banoen", "Quirino (Angkaki)"],
+        ["Bantaoay", "San Vicente"],
+        ["Bantay", "Ilocos Sur"],
+        ["Bantay Abot", "Narvacan"],
+        ["Bantugo", "Nagbukel"],
+        ["Banucal", "Lidlidda"],
+        ["Bao-as", "Santa Lucia"],
+        ["Baracbac", "Galimuyod"],
+        ["Baracbac", "Sinait"],
+        ["Baracbac", "Tagudin"],
+        ["Barangay 1 (Poblacion)", "Bantay"],
+        ["Barangay 2 (Poblacion)", "Bantay"],
+        ["Barangay 3 (Poblacion)", "Bantay"],
+        ["Barangay 4 (Poblacion)", "Bantay"],
+        ["Barangay 5 (Poblacion)", "Bantay"],
+        ["Barangay 6 (Poblacion)", "Bantay"],
+        ["Barangay I (Poblacion)", "Vigan City"],
+        ["Barangay II (Poblacion)", "Vigan City"],
+        ["Barangay III (Poblacion)", "Vigan City"],
+        ["Barangay IV (Poblacion)", "Vigan City"],
+        ["Barangay IX (Poblacion)", "Vigan City"],
+        ["Barangay V (Poblacion)", "Vigan City"],
+        ["Barangay VI (Poblacion)", "Vigan City"],
+        ["Barangay VII (Poblacion)", "Vigan City"],
+        ["Barangay VIII (Poblacion)", "Vigan City"],
+        ["Barangobong (Poblacion)", "Santa Lucia"],
+        ["Barbar", "San Juan (Lapog)"],
+        ["Barbarit", "Magsingal"],
+        ["Barikir", "Sinait"],
+        ["Baringcucurong", "Suyo"],
+        ["Bario-an", "Tagudin"],
+        ["Baritao", "Tagudin"],
+        ["Barraca", "Vigan City"],
+        ["Basug", "Santa"],
+        ["Batbato", "Alilem"],
+        ["Bateria", "San Esteban"],
+        ["Bato", "Cabugao"],
+        ["Battog", "Sinait"],
+        ["Baybayabas", "Santiago"],
+        ["Baybayading", "Salcedo (Baugen)"],
+        ["Bayubay Norte", "San Vicente"],
+        ["Bayubay Sur", "San Vicente"],
+        ["Bayugao Este", "Santa Cruz"],
+        ["Bayugao Oeste", "Santa Cruz"],
+        ["Becques", "Tagudin"],
+        ["Beddeng Daya", "Vigan City"],
+        ["Beddeng Laud", "Vigan City"],
+        ["Belen", "San Ildefonso"],
+        ["Bequi-Walin", "Lidlidda"],
+        ["Besalan", "Santa Cruz"],
+        ["Bessang", "Burgos"],
+        ["Bia-o", "Santa Maria"],
+        ["Bidbiday", "Galimuyod"],
+        ["Bigbiga", "Santiago"],
+        ["Bimmanga", "Tagudin"],
+        ["Binacud", "Sinait"],
+        ["Binalayangan", "Santo Domingo"],
+        ["Binongan", "Santo Domingo"],
+        ["Bio", "Tagudin"],
+        ["Bisangol", "Banayoyo"],
+        ["Bitalag", "Tagudin"],
+        ["Bitong", "Galimuyod"],
+        ["Boguibog", "Salcedo (Baugen)"],
+        ["Bongtolan", "Vigan City"],
+        ["Bonifacio (Poblacion)", "Cabugao"],
+        ["Borobor", "Galimuyod"],
+        ["Borobor", "Santo Domingo"],
+        ["Borono", "Tagudin"],
+        ["Bucalag", "Santa"],
+        ["Bucao East", "Tagudin"],
+        ["Bucao West", "Tagudin"],
+        ["Bugbuga", "Santa Cruz"],
+        ["Bugnay", "Candon City"],
+        ["Bugui", "Lidlidda"],
+        ["Bulag", "Bantay"],
+        ["Bulala", "Vigan City"],
+        ["Bulala-Leguey", "Salcedo (Baugen)"],
+        ["Bulanos", "Narvacan"],
+        ["Bulbulala", "Santiago"],
+        ["Buliclic", "Santa Lucia"],
+        ["Bungro", "Cabugao"],
+        ["Bungro", "Magsingal"],
+        ["Bungro", "San Ildefonso"],
+        ["Buquig", "Bantay"],
+        ["Burgos", "Ilocos Sur"],
+        ["Burgos (Poblacion)", "Santa Lucia"],
+        ["Busel-busel", "Santiago"],
+        ["Busiing Norte", "San Ildefonso"],
+        ["Busiing Sur", "San Ildefonso"],
+        ["Bussot", "Gregorio del Pilar"],
+        ["Butir", "Santa Maria"],
+        ["Butol", "Santiago"],
+        ["Cabalangegan", "Vigan City"],
+        ["Cabalanggan", "Bantay"],
+        ["Cabangaran", "Santa"],
+        ["Cabanglotan", "San Juan (Lapog)"],
+        ["Cabangtalan", "Sinait"],
+        ["Cabarambanan", "Sinait"],
+        ["Cabaritan", "Santa Lucia"],
+        ["Cabaritan", "Santo Domingo"],
+        ["Cabaroan", "Bantay"],
+        ["Cabaroan", "Magsingal"],
+        ["Cabaroan", "San Esteban"],
+        ["Cabaroan", "Santa Catalina"],
+        ["Cabaroan", "Santa Maria"],
+        ["Cabaroan", "Tagudin"],
+        ["Cabaroan (Poblacion)", "San Emilio"],
+        ["Cabaroan Daya", "Vigan City"],
+        ["Cabaroan Laud", "Vigan City"],
+        ["Cabcaburao", "Burgos"],
+        ["Cabigbigaan", "Santo Domingo"],
+        ["Cabittaogan", "Santa Catalina"],
+        ["Cabugao", "Suyo"],
+        ["Cabugao", "Ilocos Sur"],
+        ["Cabugbugan", "Tagudin"],
+        ["Cabulalaan", "Sinait"],
+        ["Cabulanglangan", "Tagudin"],
+        ["Cabuloan", "Santa Catalina"],
+        ["Caburao", "Santiago"],
+        ["Cabusligan", "Bantay"],
+        ["Cacadiran", "Cabugao"],
+        ["Cacandongan", "San Juan (Lapog)"],
+        ["Cadacad", "Burgos"],
+        ["Cadacad", "Nagbukel"],
+        ["Cadacad", "Narvacan"],
+        ["Cadanglaan", "Banayoyo"],
+        ["Cadanglaan", "Magsingal"],
+        ["Cadanglaan", "Sinait"],
+        ["Caellayan", "Cabugao"],
+        ["Cagayungan", "Narvacan"],
+        ["Calangcuasan", "Salcedo (Baugen)"],
+        ["Calanutian", "Sinait"],
+        ["Calaoaan", "Candon City"],
+        ["Calaoaan", "Santa Cruz"],
+        ["Calautit", "Santo Domingo"],
+        ["Calay-ab", "Santo Domingo"],
+        ["Calimugtong", "Galimuyod"],
+        ["Calingayan", "Sinait"],
+        ["Callaguip", "Caoayan"],
+        ["Callitong", "Burgos"],
+        ["Calongbuyan", "Candon City"],
+        ["Calongbuyan", "Galimuyod"],
+        ["Calumbaya", "Galimuyod"],
+        ["Calungboyan", "Santa"],
+        ["Calungbuyan", "Lidlidda"],
+        ["Camangaan", "Vigan City"],
+        ["Camanggaan", "San Juan (Lapog)"],
+        ["Camanggaan", "Santa Cruz"],
+        ["Camarao", "Narvacan"],
+        ["Camestizoan", "Santo Domingo"],
+        ["Camindoroan", "San Juan (Lapog)"],
+        ["Candalican", "Santa Cruz"],
+        ["Candon City", "Ilocos Sur"],
+        ["Caoayan", "Sugpon"],
+        ["Caoayan", "Ilocos Sur"],
+        ["Capangdanan", "Bantay"],
+        ["Capangpangan", "Vigan City"],
+        ["Caparacadan", "Caoayan"],
+        ["Capariaan", "Santa Cruz"],
+        ["Cappa-cappa", "San Esteban"],
+        ["Caraisan", "Magsingal"],
+        ["Carcarabasa", "Lidlidda"],
+        ["Caronoan", "San Juan (Lapog)"],
+        ["Carusipan", "Cabugao"],
+        ["Casiber", "Santa"],
+        ["Casilagan", "Nagbukel"],
+        ["Casilagan", "Narvacan"],
+        ["Casilagan", "Santa Cruz"],
+        ["Casilagan Norte", "Banayoyo"],
+        ["Casilagan Sur", "Banayoyo"],
+        ["Casili", "Santo Domingo"],
+        ["Casocos", "Nagbukel"],
+        ["Catayagan", "Santa Lucia"],
+        ["Caterman", "Candon City"],
+        ["Catucdaan", "Cabugao"],
+        ["Cayus", "Quirino (Angkaki)"],
+        ["Cervantes", "Ilocos Sur"],
+        ["Codoog", "Narvacan"],
+        ["Comillas North", "Cervantes"],
+        ["Comillas South", "Cervantes"],
+        ["Concepcion", "Gregorio del Pilar"],
+        ["Concepcion (Poblacion)", "Cervantes"],
+        ["Conconig East", "Santa Lucia"],
+        ["Conconig West", "Santa Lucia"],
+        ["Coscosnong", "Santa Cruz"],
+        ["Cuancabal", "Cabugao"],
+        ["Cuantacla", "Cabugao"],
+        ["Cubcubboot", "Candon City"],
+        ["Culiong", "Salcedo (Baugen)"],
+        ["Curtin", "Sinait"],
+        ["Daclapan", "Cabugao"],
+        ["Dacutan", "Magsingal"],
+        ["Dacutan", "Tagudin"],
+        ["Dadalaquiten Norte", "Sinait"],
+        ["Dadalaquiten Sur", "Sinait"],
+        ["Daddaay", "Alilem"],
+        ["Dalawa", "Alilem"],
+        ["Daldagan", "Galimuyod"],
+        ["Daligan", "Santa Cruz"],
+        ["Damacuag", "Santa Lucia"],
+        ["Dammay", "Santa"],
+        ["Dan-ar", "Santiago"],
+        ["Danac", "Sugpon"],
+        ["Danuman East", "Santa Maria"],
+        ["Danuman West", "Santa Maria"],
+        ["Dapdappig", "Gregorio del Pilar"],
+        ["Darao", "San Juan (Lapog)"],
+        ["Darapidap", "Candon City"],
+        ["Dardarat", "Cabugao"],
+        ["Dardarat", "San Juan (Lapog)"],
+        ["Dardarat", "Tagudin"],
+        ["Dasay", "Narvacan"],
+        ["Dayanki", "Burgos"],
+        ["Dean Leopoldo Yabes (Pug-os)", "Sinait"],
+        ["Del Pilar (Poblacion)", "Tagudin"],
+        ["Dili", "Santa Cruz"],
+        ["Dinalaoan", "Narvacan"],
+        ["Dinaratan", "Salcedo (Baugen)"],
+        ["Dinwede East", "Cervantes"],
+        ["Dinwede West", "Cervantes"],
+        ["Dirdirig (Dirdirig-Paday)", "Burgos"],
+        ["Don Alejandro Quirologico (Poblacion)", "Caoayan"],
+        ["Don Dimas Querubin (Poblacion)", "Caoayan"],
+        ["Don Lorenzo Querubin (Poblacion)", "Caoayan"],
+        ["Dongalo", "San Ildefonso"],
+        ["Dunglayan", "Santa Maria"],
+        ["Duyayyat", "Sinait"],
+        ["Elefante", "Banayoyo"],
+        ["Estancia", "Narvacan"],
+        ["Farola", "Tagudin"],
+        ["Flora", "Santo Domingo"],
+        ["Fuerte", "Caoayan"],
+        ["Gabao", "Santiago"],
+        ["Gabor Norte", "Santa Cruz"],
+        ["Gabor Sur", "Santa Cruz"],
+        ["Gabur", "Tagudin"],
+        ["Galimuyod", "Ilocos Sur"],
+        ["Garitan", "Tagudin"],
+        ["Gongogong", "San Ildefonso"],
+        ["Gregorio del Pilar", "Ilocos Sur"],
+        ["Guardia", "Banayoyo"],
+        ["Guimod", "Bantay"],
+        ["Guimod Norte", "San Juan (Lapog)"],
+        ["Guimod Sur", "San Juan (Lapog)"],
+        ["Guinabang", "Santiago"],
+        ["Gusing", "Santa Maria"],
+        ["Iboy", "San Ildefonso"],
+        ["Immayos Norte", "San Juan (Lapog)"],
+        ["Immayos Sur", "San Juan (Lapog)"],
+        ["Imus", "Santiago"],
+        ["Jardin", "Tagudin"],
+        ["Jordan", "Sinait"],
+        ["Kaliwakiw", "Salcedo (Baugen)"],
+        ["Kalumsing", "San Emilio"],
+        ["Katipunan", "Sinait"],
+        ["Kiat", "Alilem"],
+        ["Kilang", "Galimuyod"],
+        ["Kinamantirisan", "San Ildefonso"],
+        ["Kinmarin", "Salcedo (Baugen)"],
+        ["Labnig", "San Juan (Lapog)"],
+        ["Labut", "Lidlidda"],
+        ["Labut", "Magsingal"],
+        ["Labut Norte", "Santa"],
+        ["Labut Sur", "Santa"],
+        ["Lacong", "Tagudin"],
+        ["Lagatit", "Santo Domingo"],
+        ["Lalong", "Santa Cruz"],
+        ["Lamag (Tubtuba)", "Quirino (Angkaki)"],
+        ["Lancuas", "San Emilio"],
+        ["Lang-ayan", "Santiago"],
+        ["Langaoan", "Santa Maria"],
+        ["Langlangca Primero", "Candon City"],
+        ["Langlangca Segundo", "Candon City"],
+        ["Lanipao", "Narvacan"],
+        ["Lantag", "Santa Cruz"],
+        ["Lantag", "Tagudin"],
+        ["Laoingen", "Santo Domingo"],
+        ["Lapting", "Nagbukel"],
+        ["Lapting", "San Juan (Lapog)"],
+        ["Las-ud", "Santa Cruz"],
+        ["Las-ud", "Tagudin"],
+        ["Laslasong Norte", "Santa Maria"],
+        ["Laslasong Sur", "Santa Maria"],
+        ["Laslasong West", "Santa Maria"],
+        ["Legaspi", "Galimuyod"],
+        ["Legleg (Poblacion)", "Quirino (Angkaki)"],
+        ["Lesseb", "Burgos"],
+        ["Lesseb", "Santa Maria"],
+        ["Libang", "Cervantes"],
+        ["Libtong", "Tagudin"],
+        ["Licungan (Cullang)", "Sugpon"],
+        ["Lidlidda", "Ilocos Sur"],
+        ["Lingsat", "Bantay"],
+        ["Lingsat", "Santa Maria"],
+        ["Lintic", "Banayoyo"],
+        ["Lipit", "Cabugao"],
+        ["Lira (Poblacion)", "San Juan (Lapog)"],
+        ["Lopez", "Banayoyo"],
+        ["Luba", "Santa Lucia"],
+        ["Lubing", "Burgos"],
+        ["Lubnac", "Tagudin"],
+        ["Lubong", "San Vicente"],
+        ["Lubong", "Santa Lucia"],
+        ["Lubong", "Santa Maria"],
+        ["Lucaban", "Burgos"],
+        ["Lucbuban", "Salcedo (Baugen)"],
+        ["Luna", "Burgos"],
+        ["Lungog", "Narvacan"],
+        ["Lussoc", "Santo Domingo"],
+        ["Maas-asin", "Magsingal"],
+        ["Mabayag", "Galimuyod"],
+        ["Mabilbila Norte", "Santa"],
+        ["Mabilbila Sur", "Santa"],
+        ["Mabileg", "Sigay"],
+        ["Macabiag (Poblacion)", "Sinait"],
+        ["Macaoayan", "Burgos"],
+        ["Macatcatud", "Magsingal"],
+        ["Madarang", "Salcedo (Baugen)"],
+        ["Magsaysay", "Sinait"],
+        ["Magsaysay (Poblacion)", "Tagudin"],
+        ["Magsaysay District (Poblacion)", "Santa"],
+        ["Magsingal", "Ilocos Sur"],
+        ["Malacañang", "Tagudin"],
+        ["Malamin", "San Juan (Lapog)"],
+        ["Malaya", "Cervantes"],
+        ["Malideg", "Quirino (Angkaki)"],
+        ["Maligcong", "Salcedo (Baugen)"],
+        ["Malingeb", "Bantay"],
+        ["Mambog", "Santa Cruz"],
+        ["Mambug", "Burgos"],
+        ["Mambug", "Santiago"],
+        ["Man-atong", "Suyo"],
+        ["Manaboc", "Burgos"],
+        ["Manangat", "Caoayan"],
+        ["Mantanas", "Santa Cruz"],
+        ["Manueva", "Santa"],
+        ["Manzante", "Magsingal"],
+        ["Mapanit", "Burgos"],
+        ["Mapisi", "Nagbukel"],
+        ["Maradodon", "Cabugao"],
+        ["Maratudo", "Magsingal"],
+        ["Marcos (Poblacion)", "Santa"],
+        ["Margaay", "Cabugao"],
+        ["Margaay", "Narvacan"],
+        ["Marnay", "Sinait"],
+        ["Marozo", "Narvacan"],
+        ["Masadag", "Sinait"],
+        ["Matallucod", "Sigay"],
+        ["Matanubong", "Galimuyod"],
+        ["Matibuey", "San Emilio"],
+        ["Matue-Butarag", "Gregorio del Pilar"],
+        ["Maynganay Norte", "Santa Maria"],
+        ["Maynganay Sur", "Santa Maria"],
+        ["Mckinley", "Galimuyod"],
+        ["Mindoro", "Vigan City"],
+        ["Mira", "Bantay"],
+        ["Miramar", "Magsingal"],
+        ["Mission", "Nagbukel"],
+        ["Montero", "Banayoyo"],
+        ["Muraya", "San Juan (Lapog)"],
+        ["Nagbalioartian", "Sinait"],
+        ["Nagbettedan", "Santo Domingo"],
+        ["Nagbukel", "Ilocos Sur"],
+        ["Nagcullooban", "Sinait"],
+        ["Naglaoa-an", "Santo Domingo"],
+        ["Nagongburan", "Sinait"],
+        ["Nagsantaan", "Cabugao"],
+        ["Nagsantaan", "Sinait"],
+        ["Nagsayaoan", "Santa Cruz"],
+        ["Nagsingcaoan", "Candon City"],
+        ["Nagtablaan", "Santa Lucia"],
+        ["Naguiddayan", "Narvacan"],
+        ["Namboongan", "Santa Cruz"],
+        ["Nangalisan", "Candon City"],
+        ["Nangalisan", "Santa Cruz"],
+        ["Napaset", "Narvacan"],
+        ["Narvacan", "Ilocos Sur"],
+        ["Narvacan District", "Narvacan"],
+        ["Natividad (Bulaoen)", "Santa"],
+        ["Natividad (Poblacion)", "Tagudin"],
+        ["Ngolos", "Magsingal"],
+        ["Ngungunoy", "Cabugao"],
+        ["Nocoloan", "Cabugao"],
+        ["Norteam", "Bantay"],
+        ["Oaig-Daya", "Sinait"],
+        ["Oaig-Daya", "Quirino (Angkaki)"],
+        ["Oaig-Ubbog", "Sinait"],
+        ["Obbog", "Vigan City"],
+        ["Ora Centro", "Bantay"],
+        ["Ora Este", "Bantay"],
+        ["Ora Oeste", "Bantay"],
+        ["Oring", "Sinait"],
+        ["Paayas", "Cabugao"],
+        ["Pabalic", "Santa Cruz"],
+        ["Padong", "Narvacan"],
+        ["Pagleddegan", "Tagudin"],
+        ["Paguraper", "San Juan (Lapog)"],
+        ["Palacapac", "Candon City"],
+        ["Palang", "Vigan City"],
+        ["Palongpong", "Tagudin"],
+        ["Panay", "Candon City"],
+        ["Pantay Daya", "Vigan City"],
+        ["Pantay Fatima", "Vigan City"],
+        ["Pantay Laud", "Vigan City"],
+        ["Paoa", "Vigan City"],
+        ["Paratong", "Narvacan"],
+        ["Paratong", "Vigan City"],
+        ["Parparia", "Narvacan"],
+        ["Patpata Primero", "Candon City"],
+        ["Patpata Segundo", "Candon City"],
+        ["Payao", "Sinait"],
+        ["Pias", "Santiago"],
+        ["Piddig", "Burgos"],
+        ["Pidpid", "Bantay"],
+        ["Poblacion", "Alilem"],
+        ["Poblacion", "Banayoyo"],
+        ["Poblacion", "Bantay"],
+        ["Poblacion", "Burgos"],
+        ["Poblacion", "Cabugao"],
+        ["Poblacion", "Caoayan"],
+        ["Poblacion", "Cervantes"],
+        ["Poblacion", "Galimuyod"],
+        ["Poblacion", "Gregorio del Pilar"],
+        ["Poblacion", "Lidlidda"],
+        ["Poblacion", "Magsingal"],
+        ["Poblacion", "Nagbukel"],
+        ["Poblacion", "Narvacan"],
+        ["Poblacion", "Quirino (Angkaki)"],
+        ["Poblacion", "Salcedo (Baugen)"],
+        ["Poblacion", "Santiago"],
+        ["Poblacion", "Santo Domingo"],
+        ["Poblacion", "Sigay"],
+        ["Poblacion", "Sinait"],
+        ["Poblacion", "Sugpon"],
+        ["Poblacion", "Suyo"],
+        ["Poblacion", "Tagudin"],
+        ["Pong-ol", "Vigan City"],
+        ["Purok", "Vigan City"],
+        ["Puspus", "Bantay"],
+        ["Puyupuyan", "Magsingal"],
+        ["Quezon", "Burgos"],
+        ["Quezon", "Tagudin"],
+        ["Quinobquib", "Nagbukel"],
+        ["Quirino", "Quirino (Angkaki)"],
+        ["Quirino (Angkaki)", "Ilocos Sur"],
+        ["Raois", "Vigan City"],
+        ["Rugsuanan", "Vigan City"],
+        ["Sabangan", "Santa Lucia"],
+        ["Sagneb", "Sinait"],
+        ["Sagpat", "Tagudin"],
+        ["Salcedo (Baugen)", "Ilocos Sur"],
+        ["Salindeg", "Vigan City"],
+        ["Salindingan", "Santa Catalina"],
+        ["Salucag", "Narvacan"],
+        ["San Agustin", "Candon City"],
+        ["San Antonio", "Candon City"],
+        ["San Basilio", "Magsingal"],
+        ["San Emilio", "Ilocos Sur"],
+        ["San Esteban", "Ilocos Sur"],
+        ["San Ildefonso", "Ilocos Sur"],
+        ["San Jose", "Vigan City"],
+        ["San Jose", "Narvacan"],
+        ["San Juan (Lapog)", "Ilocos Sur"],
+        ["San Julian Norte", "Vigan City"],
+        ["San Julian Sur", "Vigan City"],
+        ["San Marcos", "Magsingal"],
+        ["San Pablo", "Sinait"],
+        ["San Pedro", "Vigan City"],
+        ["San Pedro", "Sinait"],
+        ["San Vicente", "Ilocos Sur"],
+        ["Santa", "Ilocos Sur"],
+        ["Santa Catalina", "Ilocos Sur"],
+        ["Santa Cruz", "Ilocos Sur"],
+        ["Santa Filomena", "Sinait"],
+        ["Santa Filomena", "Tagudin"],
+        ["Santa Lucia", "Ilocos Sur"],
+        ["Santa Maria", "Ilocos Sur"],
+        ["Santiago", "Ilocos Sur"],
+        ["Santo Domingo", "Ilocos Sur"],
+        ["Saoit", "Candon City"],
+        ["Sawat", "Sinait"],
+        ["Sigay", "Sigay"],
+        ["Sigay", "Ilocos Sur"],
+        ["Sigayan", "Santa Cruz"],
+        ["Sinabaan", "Candon City"],
+        ["Sinabaan", "Narvacan"],
+        ["Sinait", "Ilocos Sur"],
+        ["Sinait District", "Sinait"],
+        ["Sisim", "Alilem"],
+        ["Sobong", "Candon City"],
+        ["Sugpon", "Sugpon"],
+        ["Sugpon", "Ilocos Sur"],
+        ["Sulvec", "Narvacan"],
+        ["Suyo", "Suyo"],
+        ["Suyo", "Ilocos Sur"],
+        ["Tagudin", "Ilocos Sur"],
+        ["Tamag", "Vigan City"],
+        ["Tamurong", "Bantay"],
+        ["Tiglao", "Narvacan"],
+        ["Tinorian", "Salcedo (Baugen)"],
+        ["Tirong", "Tagudin"],
+        ["Turod", "Narvacan"],
+        ["Turod", "Santiago"],
+        ["Uddiawan", "Narvacan"],
+        ["Ulian", "Cabugao"],
+        ["Umanday", "Magsingal"],
+        ["Ungog", "Narvacan"],
+        ["Urayong", "Cabugao"],
+        ["Vigan City", "Vigan City"],
+        ["Vigan City", "Ilocos Sur"],
+        ["Villamar", "Santo Domingo"],
+        ["Viting", "Santa Maria"],
+        ["Wado", "Galimuyod"],
+        ["Waig", "Salcedo (Baugen)"],
+        ["Yuyeng", "Sinait"],
+    ];
+
+    let _addrSuggestions = [];
+    let _addrActiveIdx   = -1;
+
+    function onAddressInput(inp) {
+        const q = inp.value.trim().toLowerCase();
+        const box = document.getElementById('address-suggestions');
+        if (!box) return;
+        if (q.length < 2) { hideAddressSuggestions(); return; }
+
+        const matches = ILOCOS_SUR_ADDRESSES
+            .filter(([b, m]) => b.toLowerCase().includes(q) || m.toLowerCase().includes(q))
+            .sort(([a], [b2]) => {
+                const aS = a.toLowerCase().startsWith(q) ? 0 : 1;
+                const bS = b2.toLowerCase().startsWith(q) ? 0 : 1;
+                return aS - bS;
+            })
+            .slice(0, 8);
+
+        if (matches.length === 0) { hideAddressSuggestions(); return; }
+
+        _addrSuggestions = matches;
+        _addrActiveIdx   = -1;
+
+        box.innerHTML = matches.map(([brgy, mun], i) => {
+            const full = brgy + ', ' + mun + ', Ilocos Sur';
+            const q2   = q.toLowerCase();
+            const idx  = brgy.toLowerCase().indexOf(q2);
+            let hi;
+            if (idx >= 0) {
+                hi = brgy.substring(0,idx)
+                   + '<b>' + brgy.substring(idx, idx+q.length) + '</b>'
+                   + brgy.substring(idx+q.length);
+            } else {
+                hi = brgy;
+            }
+            return `<div class="addr-suggestion" data-idx="${i}" onmousedown="selectAddress(${i})">
+                        ${hi}
+                        <div class="addr-sub">${mun}, Ilocos Sur</div>
+                    </div>`;
+        }).join('');
+
+        box.style.display = '';
+    }
+
+    function selectAddress(idx) {
+        const inp = document.getElementById('address');
+        if (inp && _addrSuggestions[idx]) {
+            const [brgy, mun] = _addrSuggestions[idx];
+            inp.value = brgy + ', ' + mun + ', Ilocos Sur';
+        }
+        hideAddressSuggestions();
+    }
+
+    function hideAddressSuggestions() {
+        const box = document.getElementById('address-suggestions');
+        if (box) box.style.display = 'none';
+        _addrActiveIdx = -1;
+    }
+
+    document.addEventListener('keydown', e => {
+        const box = document.getElementById('address-suggestions');
+        if (!box || box.style.display === 'none') return;
+        const items = box.querySelectorAll('.addr-suggestion');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            _addrActiveIdx = Math.min(_addrActiveIdx + 1, items.length - 1);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            _addrActiveIdx = Math.max(_addrActiveIdx - 1, 0);
+        } else if (e.key === 'Enter' && _addrActiveIdx >= 0) {
+            e.preventDefault(); selectAddress(_addrActiveIdx); return;
+        } else if (e.key === 'Escape') {
+            hideAddressSuggestions(); return;
+        }
+        items.forEach((el, i) => el.classList.toggle('active', i === _addrActiveIdx));
+    });
+
+    });
 
         // ── TODAY'S EVENTS — notify 1 hour before the event time ──
         const todayEvents = getEventsForDate(today);
