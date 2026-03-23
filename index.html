@@ -145,8 +145,31 @@
         .fc-list-event-time { display: none !important; }
         .fc-list-empty { background: #fff !important; color: #94a3b8 !important; }
         .fc-event { border-radius: 5px !important; padding: 2px 5px !important; font-size: 10.5px !important; font-weight: 700 !important; cursor: pointer; }
-        .evt-solicit { background: #fef3c7 !important; border: none !important; border-left: 3px solid #f59e0b !important; }
-        .evt-solicit .fc-event-main { color: #92400e !important; }
+        /* Solicitation — pending (default yellow) */
+        .evt-solicit          { background: #fef3c7 !important; border: none !important; border-left: 3px solid #f59e0b !important; }
+        .evt-solicit-done     { background: #dcfce7 !important; border: none !important; border-left: 3px solid #22c55e !important; }
+        .evt-solicit-declined { background: #fee2e2 !important; border: none !important; border-left: 3px solid #ef4444 !important; }
+
+        /* Custom event content wrapper */
+        .fc-event-custom { display: flex; align-items: center; gap: 4px; width: 100%; overflow: hidden; padding: 1px 2px; }
+        .fc-event-custom .ev-title { font-size: 11px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+        .fc-event-custom .ev-badge {
+            width: 14px; height: 14px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8px; flex-shrink: 0; font-weight: 900;
+        }
+        .ev-badge-done     { background: #16a34a; color: #fff; }
+        .ev-badge-declined { background: #ef4444; color: #fff; }
+        .ev-badge-pending  { background: #f59e0b; color: #fff; }
+
+        /* Text colors per status */
+        .evt-solicit .ev-title          { color: #92400e !important; }
+        .evt-solicit-done .ev-title     { color: #14532d !important; }
+        .evt-solicit-declined .ev-title { color: #7f1d1d !important; }
+
+        /* Event/Hearing keep original styling */
+        .evt-office .fc-event-main  { color: #1e40af !important; }
+        .evt-hearing .fc-event-main { color: #166534 !important; }
         .evt-office { background: #eff6ff !important; border: none !important; border-left: 3px solid #3b82f6 !important; }
         .evt-office .fc-event-main { color: #1e40af !important; }
         .evt-hearing { background: #dcfce7 !important; border: none !important; border-left: 3px solid #22c55e !important; }
@@ -806,11 +829,8 @@
     function saveDataLocally() {
         localStorage.setItem(STORE_KEY, JSON.stringify(GLOBAL_DATA));
         updateCounts();
-        // Refresh calendar events without full destroy/rebuild
-        if (calendar) {
-            calendar.removeAllEvents();
-            calendar.addEventSource(GLOBAL_DATA);
-        }
+        // Full reinit needed so eventContent (status badges) re-renders correctly
+        initCalendar();
         renderSchedulePanel();
         renderTable(getActiveType(), getQuery(), getFilter());
     }
@@ -889,7 +909,64 @@
     function exportCSV(){const type=getActiveType(),q=getQuery(),sf=getFilter();let data=GLOBAL_DATA.filter(e=>e.extendedProps?.type===type);if(q)data=data.filter(e=>`${e.title} ${e.id} ${e.extendedProps?.address||''}`.toLowerCase().includes(q));if(type==='solicitation'&&sf!=='all')data=data.filter(e=>e.extendedProps?.status===sf);let csv=type==='solicitation'?"ID,Date,Name,Description,Address,Contact,Status,Amount,DateReceived,ClaimedBy,ReleasedBy\n":"ID,Date,Time,Title,Venue,Notes\n";data.forEach(e=>{const p=e.extendedProps||{};if(type==='solicitation'){const addr=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'';csv+=`${e.id},${e.start},"${e.title}","${p.description||''}","${addr}","${p.contact||''}",${p.status},${p.amount||0},${p.dateGiven||''},"${p.personClaimed||''}","${p.releasedBy||''}"\n`;}else{csv+=`${e.id},${e.start},"${p.time||''}","${e.title}","${p.venue||''}","${p.description||''}"\n`;}});const a=document.createElement('a');a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);a.download=`solisystem_${type}_${getLocalDate()}.csv`;document.body.appendChild(a);a.click();a.remove();}
 
     // ── CALENDAR ──
-    function initCalendar(){const el=document.getElementById('calendar');if(calendar)calendar.destroy();calendar=new FullCalendar.Calendar(el,{initialView:window.innerWidth<640?'listWeek':'dayGridMonth',headerToolbar:{left:'prev,next',center:'title',right:window.innerWidth<640?'today':'dayGridMonth,listWeek,today'},height:'100%',events:GLOBAL_DATA,allDayText:'',eventClassNames:arg=>{const t=arg.event.extendedProps?.type;if(t==='solicitation')return['evt-solicit'];if(t==='hearing')return['evt-hearing'];return['evt-office'];},dateClick:info=>openModal(null,info.dateStr),eventClick:info=>openModal(info.event)});calendar.render();}
+    function initCalendar() {
+        const el = document.getElementById('calendar');
+        if (calendar) calendar.destroy();
+        calendar = new FullCalendar.Calendar(el, {
+            initialView: window.innerWidth < 640 ? 'listWeek' : 'dayGridMonth',
+            headerToolbar: {
+                left:   'prev,next',
+                center: 'title',
+                right:  window.innerWidth < 640 ? 'today' : 'dayGridMonth,listWeek,today'
+            },
+            height:   'auto',
+            events:   GLOBAL_DATA,
+            allDayText: '',
+
+            // ── Class per event type + solicitation status ──
+            eventClassNames: arg => {
+                const p = arg.event.extendedProps || {};
+                if (p.type === 'solicitation') {
+                    if (p.status === 'done')     return ['evt-solicit-done'];
+                    if (p.status === 'declined') return ['evt-solicit-declined'];
+                    return ['evt-solicit'];
+                }
+                if (p.type === 'hearing') return ['evt-hearing'];
+                return ['evt-office'];
+            },
+
+            // ── Custom render for solicitations — show status badge ──
+            eventContent: arg => {
+                const p    = arg.event.extendedProps || {};
+                const title = arg.event.title || '';
+
+                if (p.type === 'solicitation') {
+                    // Badge icon and class per status
+                    let badgeClass = 'ev-badge-pending';
+                    let badgeIcon  = '●';
+                    if (p.status === 'done') {
+                        badgeClass = 'ev-badge-done';
+                        badgeIcon  = '✓';
+                    } else if (p.status === 'declined') {
+                        badgeClass = 'ev-badge-declined';
+                        badgeIcon  = '✕';
+                    }
+                    return {
+                        html: `<div class="fc-event-custom">
+                                 <span class="ev-badge ${badgeClass}">${badgeIcon}</span>
+                                 <span class="ev-title">${title}</span>
+                               </div>`
+                    };
+                }
+                // Events and hearings — default FullCalendar rendering
+                return true;
+            },
+
+            dateClick:  info => openModal(null, info.dateStr),
+            eventClick: info => openModal(info.event)
+        });
+        calendar.render();
+    }
 
     // ── RIGHT PANEL ──
     function toggleRightPanel(){document.getElementById('right-panel').classList.toggle('rp-hidden');setTimeout(()=>calendar&&calendar.render(),320);}
