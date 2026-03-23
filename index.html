@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SOLISYSTEM - Office 2 (V3)</title>
+    <title>SOLISYSTEM (V30)</title>
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#0f172a">
 
@@ -703,6 +703,63 @@
     </div>
 </div>
 
+<!-- UPLOAD MODAL -->
+<div id="upload-modal" class="modal-wrap">
+    <div class="modal-box" style="max-width:400px">
+        <div class="modal-handle"></div>
+        <div class="modal-head">
+            <span class="modal-title"><i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;margin-right:8px"></i>Upload to Google Sheet</span>
+            <button class="modal-close" onclick="hideModal('upload-modal')"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="padding:20px">
+            <p style="font-size:12px;color:#64748b;margin-bottom:16px">Select which records to upload:</p>
+
+            <label style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px;transition:background .15s" id="ul-sol-row">
+                <input type="checkbox" id="ul-sol" checked onchange="onUploadCheckChange()" style="width:17px;height:17px;accent-color:#0f172a;cursor:pointer">
+                <div style="flex:1">
+                    <div style="font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:7px">
+                        <i class="fa-solid fa-hand-holding-heart" style="color:#f59e0b"></i> Solicitations
+                    </div>
+                    <div id="ul-sol-count" style="font-size:11px;color:#94a3b8;margin-top:2px">0 records</div>
+                </div>
+            </label>
+
+            <label style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:8px;transition:background .15s" id="ul-evt-row">
+                <input type="checkbox" id="ul-evt" checked onchange="onUploadCheckChange()" style="width:17px;height:17px;accent-color:#0f172a;cursor:pointer">
+                <div style="flex:1">
+                    <div style="font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:7px">
+                        <i class="fa-solid fa-calendar-star" style="color:#3b82f6"></i> Events
+                    </div>
+                    <div id="ul-evt-count" style="font-size:11px;color:#94a3b8;margin-top:2px">0 records</div>
+                </div>
+            </label>
+
+            <label style="display:flex;align-items:center;gap:12px;padding:14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;cursor:pointer;margin-bottom:0;transition:background .15s" id="ul-hrg-row">
+                <input type="checkbox" id="ul-hrg" checked onchange="onUploadCheckChange()" style="width:17px;height:17px;accent-color:#0f172a;cursor:pointer">
+                <div style="flex:1">
+                    <div style="font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:7px">
+                        <i class="fa-solid fa-gavel" style="color:#22c55e"></i> Hearings
+                    </div>
+                    <div id="ul-hrg-count" style="font-size:11px;color:#94a3b8;margin-top:2px">0 records</div>
+                </div>
+            </label>
+
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between">
+                <button type="button" onclick="toggleAllUpload()" id="ul-toggle-all" style="font-size:11.5px;font-weight:700;color:#475569;background:none;border:none;cursor:pointer;padding:0;font-family:inherit">
+                    <i class="fa-solid fa-check-double"></i> Select All
+                </button>
+                <span id="ul-total-count" style="font-size:11px;color:#94a3b8;font-weight:600">0 records selected</span>
+            </div>
+        </div>
+        <div class="modal-foot" style="justify-content:flex-end;gap:8px">
+            <button class="fbtn fbtn-ghost" onclick="hideModal('upload-modal')">Cancel</button>
+            <button class="fbtn fbtn-primary" id="ul-confirm-btn" onclick="confirmUpload()">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Selected
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- PRINT AREA -->
 <div id="print-area">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:2px solid #111;padding-bottom:14px">
@@ -942,35 +999,125 @@
         await appAlert("Saved Locally", "Record saved to your device.", "success");
     }
 
-    // ── Save locally AND sync to Google Sheet ──
+    // ── Save locally AND sync to Google Sheet (uploads ALL types, skips modal) ──
     async function saveFormAndUpload() {
         const entry = await saveForm();
         if (!entry) return; // validation failed
         closeModal();
-        await syncToCloud();
+        // Upload everything directly without showing the checklist modal
+        const btns = ['btn-upload-d','btn-upload-m','btn-sync'].map(id => document.getElementById(id)).filter(Boolean);
+        const origs = btns.map(b => b.innerHTML);
+        btns.forEach(b => { b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; b.disabled = true; });
+        try {
+            const payload = { action:"sync", data:GLOBAL_DATA, notifEmail: APP_SETTINGS.notifEmail || "" };
+            const res = await fetch(API_URL, { method:"POST", body:JSON.stringify(payload) });
+            const r   = await res.json();
+            if (r.result === "success") await appAlert("Saved & Uploaded!", "Record saved and synced to Google Sheets.", "success");
+            else await appAlert("Upload Failed", r.message, "error");
+        } catch { await appAlert("Connection Error", "Saved locally. Check internet and upload manually.", "error"); }
+        finally { btns.forEach((b,i) => { b.innerHTML=origs[i]; b.disabled=false; }); }
     }
 
     // ── DELETE ──
     async function deleteEntry(){const ok=await appConfirm("Delete Record","Permanently delete this entry?","Delete","error");if(!ok)return;GLOBAL_DATA=GLOBAL_DATA.filter(e=>e.id!=document.getElementById('entry-id').value);saveDataLocally();closeModal();await appAlert("Deleted","Record removed.","success");}
 
     // ── CLOUD ──
-    async function syncToCloud(){
-        const btns=['btn-upload-d','btn-upload-m','btn-sync'].map(id=>document.getElementById(id)).filter(Boolean);
-        const origs=btns.map(b=>b.innerHTML);
-        btns.forEach(b=>{b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';b.disabled=true;});
-        try{
+
+    // Open the upload checklist modal
+    function syncToCloud() {
+        // Update counts in modal
+        const counts = { solicitation:0, event:0, hearing:0 };
+        GLOBAL_DATA.forEach(e => { const t = e.extendedProps?.type; if (counts[t] !== undefined) counts[t]++; });
+        const s = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
+        s('ul-sol-count', counts.solicitation + ' record' + (counts.solicitation !== 1 ? 's' : ''));
+        s('ul-evt-count', counts.event        + ' record' + (counts.event        !== 1 ? 's' : ''));
+        s('ul-hrg-count', counts.hearing      + ' record' + (counts.hearing      !== 1 ? 's' : ''));
+        updateUploadTotal();
+        showModal('upload-modal');
+    }
+
+    function updateUploadTotal() {
+        const sol = document.getElementById('ul-sol')?.checked;
+        const evt = document.getElementById('ul-evt')?.checked;
+        const hrg = document.getElementById('ul-hrg')?.checked;
+        const types = [];
+        if (sol) types.push('solicitation');
+        if (evt) types.push('event');
+        if (hrg) types.push('hearing');
+        const total = GLOBAL_DATA.filter(e => types.includes(e.extendedProps?.type)).length;
+        const el = document.getElementById('ul-total-count');
+        if (el) el.innerText = total + ' record' + (total !== 1 ? 's' : '') + ' selected';
+        // Update confirm button
+        const btn = document.getElementById('ul-confirm-btn');
+        if (btn) btn.disabled = types.length === 0;
+        // Update toggle-all button label
+        const allChecked = sol && evt && hrg;
+        const toggleBtn = document.getElementById('ul-toggle-all');
+        if (toggleBtn) toggleBtn.innerHTML = allChecked
+            ? '<i class="fa-solid fa-square-minus"></i> Deselect All'
+            : '<i class="fa-solid fa-check-double"></i> Select All';
+    }
+
+    function toggleAllUpload() {
+        const sol = document.getElementById('ul-sol');
+        const evt = document.getElementById('ul-evt');
+        const hrg = document.getElementById('ul-hrg');
+        const allChecked = sol?.checked && evt?.checked && hrg?.checked;
+        [sol, evt, hrg].forEach(cb => { if (cb) cb.checked = !allChecked; });
+        updateUploadTotal();
+    }
+
+    // Called from checkbox changes
+    function onUploadCheckChange() { updateUploadTotal(); }
+
+    // Perform the actual upload with selected types
+    async function confirmUpload() {
+        const sol = document.getElementById('ul-sol')?.checked;
+        const evt = document.getElementById('ul-evt')?.checked;
+        const hrg = document.getElementById('ul-hrg')?.checked;
+        const selectedTypes = [];
+        if (sol) selectedTypes.push('solicitation');
+        if (evt) selectedTypes.push('event');
+        if (hrg) selectedTypes.push('hearing');
+
+        if (selectedTypes.length === 0) {
+            await appAlert("Nothing Selected", "Please select at least one type to upload.", "warning");
+            return;
+        }
+
+        hideModal('upload-modal');
+
+        const filteredData = GLOBAL_DATA.filter(e => selectedTypes.includes(e.extendedProps?.type));
+        const typeLabels = selectedTypes.map(t => t.charAt(0).toUpperCase() + t.slice(1) + 's').join(', ');
+
+        // Set all upload buttons to loading
+        const btns = ['btn-upload-d','btn-upload-m','btn-sync'].map(id => document.getElementById(id)).filter(Boolean);
+        const origs = btns.map(b => b.innerHTML);
+        btns.forEach(b => { b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; b.disabled = true; });
+
+        try {
             const payload = {
                 action:     "sync",
-                data:       GLOBAL_DATA,
+                data:       filteredData,
                 notifEmail: APP_SETTINGS.notifEmail || ""
             };
-            const res=await fetch(API_URL,{method:"POST",body:JSON.stringify(payload)});
-            const r=await res.json();
-            if(r.result==="success") await appAlert("Upload OK","Data synced to Google Sheets.","success");
-            else await appAlert("Upload Failed",r.message,"error");
+            const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+            const r   = await res.json();
+            if (r.result === "success") {
+                await appAlert(
+                    "Upload Successful! ☁️",
+                    `${filteredData.length} record(s) uploaded.
+Types: ${typeLabels}`,
+                    "success"
+                );
+            } else {
+                await appAlert("Upload Failed", r.message, "error");
+            }
+        } catch {
+            await appAlert("Connection Error", "Check your internet connection and try again.", "error");
+        } finally {
+            btns.forEach((b, i) => { b.innerHTML = origs[i]; b.disabled = false; });
         }
-        catch{await appAlert("Connection Error","Check internet and try again.","error");}
-        finally{btns.forEach((b,i)=>{b.innerHTML=origs[i];b.disabled=false;});}
     }
     async function downloadFromCloud(){const ok=await appConfirm("Restore from Cloud","This will overwrite your local data.","Overwrite","warning");if(!ok)return;const btn=document.getElementById('btn-download');const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Downloading...';btn.disabled=true;try{const url=API_URL+(API_URL.includes('?')?'&':'?')+'action=download&t='+Date.now();const res=await fetch(url,{method:'GET'});if(!res.ok)throw new Error("Network error.");const result=JSON.parse(await res.text());if(result.result==="success"){GLOBAL_DATA=sanitizeData(result.data);saveDataLocally();populateYearFilter();await appAlert("Restored","Data restored from cloud.","success");location.reload();}else await appAlert("Failed",result.message,"error");}catch(e){await appAlert("Failed",e.message,"error");}finally{btn.innerHTML=orig;btn.disabled=false;}}
     function downloadBackup(){const a=document.createElement('a');a.href="data:text/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(GLOBAL_DATA));a.download="solisystem_backup_"+getLocalDate()+".json";document.body.appendChild(a);a.click();a.remove();}
