@@ -537,18 +537,18 @@
             <div class="tbl-scroll">
                 <div id="table-solicitation">
                     <table class="data-tbl">
-                        <thead><tr>
-                            <th>ID</th>
-                            <th  style="cursor:pointer;user-select:none" onclick="cycleSolSort()">Date Rcv'd Solicit <span id="sort-icon-date"></span></th>
-                            <th>Name / Organization</th>
+                        <thead><tr><th>ID</th>
+                            <th id="th-evt-date" style="cursor:pointer;user-select:none;color:#7c3aed" onclick="cycleSolSort()">📅 Event<span id="sort-icon-evt">↑</span></th>
+                            <th id="th-sol-date" style="cursor:pointer;user-select:none" onclick="cycleSolSort()">📥 Solicit<span id="sort-icon-date"></span></th>
+                            <th>Name</th>
                             <th>Description</th>
                             <th>Address</th>
-                            <th id="th-rcv-date" style="cursor:pointer;user-select:none" onclick="cycleSolSort()">Date Rcv'd Cash <span id="sort-icon-rcv"></span></th>
+                            <th id="th-rcv-date" style="cursor:pointer;user-select:none;color:#0369a1" onclick="cycleSolSort()">💰 Cash<span id="sort-icon-rcv"></span></th>
                             <th>Status</th>
-                            <th style="text-align:right">Amount</th></tr></thead>
+                            <th style="text-align:right">Amount</th>
+                        </tr></thead>
                         <tbody id="tbody-sol"></tbody>
                     </table>
-
                 </div>
                 <div id="table-event" style="display:none">
                     <table class="data-tbl">
@@ -691,7 +691,7 @@
     <div class="modal-box" style="max-width:660px">
         <div class="modal-handle"></div>
         <div class="modal-head">
-            <span class="modal-title"><i class="fa-solid fa-chart-pie" style="color:#f59e0b;margin-right:7px"></i>Dashboard</span>
+            <span class="modal-title"><i class="fa-solid fa-chart-pie" style="color:#f59e0b;margin-right:7px"></i>Morning Briefing</span>
             <button class="modal-close" onclick="closeDashboard()"><i class="fa-solid fa-times"></i></button>
         </div>
         <div class="modal-body">
