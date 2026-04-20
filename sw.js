@@ -1,8 +1,8 @@
-const CACHE_NAME = 'solisystem-v3-cache';
+const CACHE_NAME = 'solisystem-v4-cache';
 
 const ASSETS = [
     './',
-    './solisystem-v3.html',
+    './index.html',
     './manifest.json',
     './icon-192.png',
     './icon-512.png'
@@ -51,7 +51,7 @@ self.addEventListener('fetch', event => {
                 caches.match(event.request).then(cached => {
                     if (cached) return cached;
                     if (event.request.mode === 'navigate') {
-                        return caches.match('./solisystem-v3.html');
+                        return caches.match('./index.html');
                     }
                 })
             )
@@ -71,7 +71,7 @@ self.addEventListener('notificationclick', event => {
             }
             // Otherwise open a new window
             if (clients.openWindow) {
-                return clients.openWindow('./solisystem-v3.html');
+                return clients.openWindow('./index.html');
             }
         })
     );
