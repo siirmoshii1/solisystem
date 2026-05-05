@@ -414,10 +414,114 @@
         /* ══ DRAFT TOAST ══ */
         #draft-toast { flex: 0 0 100%; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #16a34a; opacity: 0; transition: opacity .3s; pointer-events: none; padding: 0 2px 4px; }
         #draft-toast.show { opacity: 1; }
+
+        /* ══════════════════════════════════════════
+           DARK MODE OVERRIDES
+        ══════════════════════════════════════════ */
+        body.dark-mode { background: linear-gradient(135deg, #0f172a 0%, #020617 100%); color: #f8fafc; }
+        body.dark-mode header, body.dark-mode #sidebar { background: rgba(30, 41, 59, 0.85); border-color: #334155; }
+        body.dark-mode .hdr-row1, body.dark-mode .rp-header { border-color: #334155; }
+        body.dark-mode .hbtn-icon, body.dark-mode .hbtn-sm, body.dark-mode .sb-btn { background: #334155; color: #cbd5e1; border-color: #475569; }
+        body.dark-mode .hbtn-icon:hover, body.dark-mode .hbtn-sm:hover, body.dark-mode .sb-btn:hover { background: #475569; color: #f8fafc; }
+        body.dark-mode .view-toggle, body.dark-mode .type-sw { background: #1e293b; border-color: #334155; }
+        body.dark-mode .vtbtn.active, body.dark-mode .tsw-btn.active { background: #3b82f6; color: #fff; }
+        body.dark-mode .search-box input, body.dark-mode .filter-sel, body.dark-mode .fi, body.dark-mode .fsel, body.dark-mode .fta { background-color: #1e293b; border-color: #475569; color: #f8fafc; }
+        body.dark-mode .search-box input::placeholder, body.dark-mode .fi::placeholder { color: #64748b; }
+        body.dark-mode .search-box input:focus, body.dark-mode .fi:focus, body.dark-mode .fsel:focus, body.dark-mode .fta:focus { border-color: #3b82f6; }
+        body.dark-mode .fbtn-ghost, body.dark-mode .modal-close, body.dark-mode .sb-close { background: #1e293b; color: #cbd5e1; border-color: #475569; }
+        body.dark-mode .fbtn-ghost:hover, body.dark-mode .modal-close:hover, body.dark-mode .sb-close:hover { background: #334155; color: #fff; }
+        body.dark-mode .fbtn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+        body.dark-mode #view-calendar, body.dark-mode #view-table, body.dark-mode #right-panel { background: rgba(30, 41, 59, 0.95); border-color: #334155; }
+        body.dark-mode .modal-box, body.dark-mode .dlg-box { background: #0f172a; border-color: #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); }
+        body.dark-mode table.data-tbl thead th { background: #1e293b; border-color: #334155; color: #94a3b8; }
+        body.dark-mode table.data-tbl tbody tr { border-color: #334155; }
+        body.dark-mode table.data-tbl tbody tr:hover { background: rgba(51, 65, 85, 0.5); }
+        body.dark-mode .td-name, body.dark-mode .td-amt, body.dark-mode .modal-title, body.dark-mode .sched-name, body.dark-mode .dlg-title { color: #f8fafc; }
+        body.dark-mode .td-date, body.dark-mode .td-sub, body.dark-mode .td-addr, body.dark-mode .sched-venue, body.dark-mode .dlg-msg { color: #94a3b8; }
+        body.dark-mode .tab-btn { color: #64748b; }
+        body.dark-mode .tab-btn.active { color: #f8fafc; border-bottom-color: #3b82f6; }
+        body.dark-mode .tab-count { background: #334155; color: #94a3b8; }
+        body.dark-mode .tab-btn.active .tab-count { background: #3b82f6; color: #fff; }
+        body.dark-mode .modal-head, body.dark-mode .modal-foot, body.dark-mode .dlg-btns { border-color: #334155; }
+        body.dark-mode .sched-item { background: #1e293b; border-color: #334155; }
+        body.dark-mode .sched-item:hover { background: #334155; }
+        body.dark-mode .fc-toolbar-title { color: #f8fafc !important; }
+        body.dark-mode .fc-button-primary { background: #334155 !important; border-color: #475569 !important; color: #f8fafc !important; }
+        body.dark-mode .fc-day-today { background: #334155 !important; }
+        body.dark-mode .fc-daygrid-day, body.dark-mode .fc-scrollgrid td, body.dark-mode .fc-scrollgrid th, body.dark-mode .fc-scrollgrid { border-color: #475569 !important; }
+        body.dark-mode .office-block .oname { color: #f8fafc; }
+        body.dark-mode .logo-group text[fill="#0F172A"] { fill: #f8fafc; }
+        body.dark-mode .logo-group path[stroke="#0F172A"] { stroke: #f8fafc; }
+        body.dark-mode .dash-card { background: rgba(30,41,59,0.8); border-color: #475569; }
+        body.dark-mode .dash-chart-wrap { background: #1e293b; border-color: #334155; }
+        body.dark-mode .inline-status-sel { color: #f8fafc; }
+        body.dark-mode .inline-status-sel option { background: #1e293b; color: #f8fafc; }
+        body.dark-mode .addr-suggestion { border-color: #334155; color: #cbd5e1; }
+        body.dark-mode .addr-suggestion:hover, body.dark-mode .addr-suggestion.active { background: #334155; }
+        body.dark-mode .dash-total { box-shadow: 0 10px 30px -10px rgba(0,0,0,0.8); }
+
+        /* ══════════════════════════════════════════
+           NEW FEATURES CSS (KPI, Inline Status, Alerts)
+        ══════════════════════════════════════════ */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        @media (max-width: 640px) { .kpi-grid { grid-template-columns: 1fr; gap: 8px; } }
+        .kpi-card { background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 15px -5px rgba(0,0,0,0.03); transition: transform 0.2s; }
+        body.dark-mode .kpi-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-color: #334155; }
+        .kpi-card:hover { transform: translateY(-2px); }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .kpi-card.k-blue .kpi-icon { background: #eff6ff; color: #3b82f6; }
+        .kpi-card.k-green .kpi-icon { background: #f0fdf4; color: #22c55e; }
+        .kpi-card.k-yellow .kpi-icon { background: #fefce8; color: #eab308; }
+        body.dark-mode .kpi-card.k-blue .kpi-icon { background: rgba(59,130,246,0.2); }
+        body.dark-mode .kpi-card.k-green .kpi-icon { background: rgba(34,197,94,0.2); }
+        body.dark-mode .kpi-card.k-yellow .kpi-icon { background: rgba(234,179,8,0.2); }
+        .kpi-content { flex: 1; min-width: 0; }
+        .kpi-val { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        body.dark-mode .kpi-val { color: #f8fafc; }
+        .kpi-lbl { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+
+        .inline-status-sel { background-color: transparent; border: 1px solid transparent; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 11px; padding: 4px 18px 4px 11px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; appearance: none; cursor: pointer; outline: none; background-repeat: no-repeat; background-position: right 6px center; background-size: 8px; transition: all 0.2s; }
+        .inline-status-sel:hover { border-color: currentColor; }
+        .inline-status-sel.pending { color: #b45309; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%23b45309' d='M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z'/%3E%3C/svg%3E"); }
+        .inline-status-sel.done { color: #15803d; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%2315803d' d='M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z'/%3E%3C/svg%3E"); }
+        .inline-status-sel option { background: #fff; color: #0f172a; }
+        body.dark-mode .inline-status-sel.pending { color: #fbbf24; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%23fbbf24' d='M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z'/%3E%3C/svg%3E"); }
+        body.dark-mode .inline-status-sel.done { color: #4ade80; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%234ade80' d='M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z'/%3E%3C/svg%3E"); }
+        .text-violet { color: #7c3aed; } body.dark-mode .text-violet { color: #a78bfa; }
+        .text-sky { color: #0369a1; } body.dark-mode .text-sky { color: #38bdf8; }
+        .text-muted { color: #cbd5e1; } body.dark-mode .text-muted { color: #64748b; }
+        body:not(.dark-mode) .status-pending { background-color: rgba(251, 191, 36, 0.05); }
+        body:not(.dark-mode) .status-done { background-color: rgba(34, 197, 94, 0.05); }
+        body.dark-mode .status-pending { background-color: rgba(251, 191, 36, 0.1); }
+        body.dark-mode .status-done { background-color: rgba(34, 197, 94, 0.1); }
+
+        .btn-relative { position: relative; overflow: visible; }
+        .badge-alert { position: absolute; top: -4px; right: -4px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 10px; line-height: 1; border: 2px solid #fff; pointer-events: none; }
+        body.dark-mode .badge-alert { border-color: #1e293b; }
+        .alert-dropdown { position: fixed; top: 64px; right: 20px; width: 320px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; z-index: 1000; flex-direction: column; max-height: 400px; animation: scaleIn .2s cubic-bezier(0.16,1,0.3,1); }
+        @media (max-width: 900px) { .alert-dropdown { top: 100px; right: 10px; width: 300px; } }
+        body.dark-mode .alert-dropdown { background: #1e293b; border-color: #334155; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .alert-dropdown.show { display: flex; }
+        .alert-head { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 800; color: #0f172a; display: flex; justify-content: space-between; align-items: center; }
+        body.dark-mode .alert-head { border-color: #334155; color: #f8fafc; }
+        .alert-body { flex: 1; overflow-y: auto; }
+        .alert-item { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.15s; }
+        body.dark-mode .alert-item { border-color: #334155; }
+        .alert-item:hover { background: #f8fafc; }
+        body.dark-mode .alert-item:hover { background: #334155; }
+        .alert-item-title { font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+        body.dark-mode .alert-item-title { color: #f8fafc; }
+        .alert-item-msg { font-size: 12px; color: #64748b; }
+        body.dark-mode .alert-item-msg { color: #94a3b8; }
+        .alert-empty { padding: 24px; text-align: center; color: #94a3b8; font-size: 13px; }
     </style>
 </head>
 <body>
 
+<div id="alert-dropdown" class="alert-dropdown">
+    <div class="alert-head">Requires Attention <i class="fa-solid fa-bell" style="color:#f59e0b"></i></div>
+    <div class="alert-body" id="alert-body"></div>
+</div>
 <div id="overlay" onclick="closeSidebar()"></div>
 
 <!-- APP DIALOG -->
@@ -489,6 +593,8 @@
                 <button class="vtbtn active" id="vcal-d" onclick="switchView('calendar')"><i class="fa-solid fa-calendar-days"></i> Calendar</button>
                 <button class="vtbtn" id="vtbl-d" onclick="switchView('table')"><i class="fa-solid fa-list"></i> List</button>
             </div>
+            <button class="hbtn hbtn-icon btn-relative" onclick="toggleAlerts()" title="Alerts"><i class="fa-solid fa-bell"></i><span class="badge-alert" id="alert-badge-d" style="display:none">0</span></button>
+            <button class="hbtn hbtn-icon" onclick="toggleTheme()" title="Toggle Dark Mode"><i class="fa-solid fa-moon theme-icon"></i></button>
             <button class="hbtn hbtn-icon" onclick="toggleSidebar()" title="Settings"><i class="fa-solid fa-sliders"></i></button>
             <button class="hbtn hbtn-icon" onclick="location.reload()" title="Refresh"><i class="fa-solid fa-rotate-right"></i></button>
             <button class="hbtn hbtn-icon" onclick="showDashboard()" title="Dashboard"><i class="fa-solid fa-chart-pie"></i></button>
@@ -527,6 +633,8 @@
             <button class="vtbtn" id="vtbl-m" onclick="switchView('table')"><i class="fa-solid fa-list"></i></button>
         </div>
 
+        <button class="hbtn hbtn-sm btn-relative" onclick="toggleAlerts()" title="Alerts"><i class="fa-solid fa-bell"></i><span class="badge-alert" id="alert-badge-m" style="display:none">0</span></button>
+        <button class="hbtn hbtn-sm" onclick="toggleTheme()" title="Toggle Dark Mode"><i class="fa-solid fa-moon theme-icon"></i></button>
         <button class="hbtn hbtn-sm" onclick="toggleSidebar()" title="Settings"><i class="fa-solid fa-sliders"></i></button>
         <button class="hbtn hbtn-sm" onclick="location.reload()" title="Refresh"><i class="fa-solid fa-rotate-right"></i></button>
         <button class="hbtn hbtn-sm" onclick="showDashboard()" title="Dashboard"><i class="fa-solid fa-chart-pie"></i></button>
@@ -767,18 +875,29 @@
                 </button>
             </div>
 
-            <!-- Total cash released card -->
-            <div class="dash-total">
-                <div class="dash-total-label" id="dash-total-label">Total Cash Released — All Time</div>
-                <div class="dash-total-val" id="dash-total-amount">₱0</div>
-            </div>
-
-            <!-- Stats grid -->
-            <div class="dash-grid">
-                <div class="dash-card"><div class="dash-val" id="dash-pending"  style="color:#b45309">0</div><div class="dash-lbl">Pending</div></div>
-                <div class="dash-card"><div class="dash-val" id="dash-done"     style="color:#15803d">0</div><div class="dash-lbl">Released</div></div>
-                <div class="dash-card"><div class="dash-val" id="dash-events"   style="color:#1d4ed8">0</div><div class="dash-lbl">Events</div></div>
-                <div class="dash-card"><div class="dash-val" id="dash-hearings" style="color:#15803d">0</div><div class="dash-lbl">Hearings</div></div>
+            <!-- KPI Dashboard Summary -->
+            <div class="kpi-grid">
+                <div class="kpi-card k-green">
+                    <div class="kpi-icon"><i class="fa-solid fa-coins"></i></div>
+                    <div class="kpi-content">
+                        <div class="kpi-val" id="kpi-released">₱0</div>
+                        <div class="kpi-lbl" id="kpi-released-lbl">Total Released</div>
+                    </div>
+                </div>
+                <div class="kpi-card k-yellow">
+                    <div class="kpi-icon"><i class="fa-regular fa-clock"></i></div>
+                    <div class="kpi-content">
+                        <div class="kpi-val" id="kpi-pending">0</div>
+                        <div class="kpi-lbl">Pending Action</div>
+                    </div>
+                </div>
+                <div class="kpi-card k-blue">
+                    <div class="kpi-icon"><i class="fa-regular fa-calendar-check"></i></div>
+                    <div class="kpi-content">
+                        <div class="kpi-val" id="kpi-upcoming">0</div>
+                        <div class="kpi-lbl">Upcoming (7d)</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Sol count breakdown -->
@@ -1057,6 +1176,7 @@
                     <select id="pr-sort" class="fsel" onchange="updatePrintPreview()">
                         <option value="event-date">Event Date (ascending)</option>
                         <option value="date">Date Received (ascending)</option>
+                        <option value="date-given">Cash Released Date (ascending)</option>
                         <option value="amount-desc">Amount (highest first)</option>
                         <option value="name">Name (A–Z)</option>
                     </select>
@@ -1302,13 +1422,18 @@ function getQuarterFilter(){const q=document.getElementById('filter-quarter');re
 
     // ── Core: compute + render dashboard stats for given month/year ──
     function computeDashboard(monthFilter, yearFilter) {
-        let pending=0, done=0, events=0, hearings=0, total=0;
+        let pending=0, done=0, events=0, hearings=0, total=0, upcomingCount=0;
         const monthNames = ['','January','February','March','April','May',
                             'June','July','August','September','October','November','December'];
+        
+        const now = new Date();
+        const threshold = new Date();
+        threshold.setDate(now.getDate() + 7);
 
         GLOBAL_DATA.forEach(e => {
             const p    = e.extendedProps || {};
-            const date = e.start || '';
+            let date = e.start || '';
+            if (p.type === 'solicitation' && p.dateGiven) date = p.dateGiven;
 
             // Apply month filter
             if (monthFilter !== 'all') {
@@ -1322,28 +1447,32 @@ function getQuarterFilter(){const q=document.getElementById('filter-quarter');re
 
             if (p.type === 'solicitation') {
                 if      (p.status === 'done')    { done++;    total += parseFloat(p.amount || 0); }
-                else                               pending++;
+                else    { 
+                    pending++; 
+                    if (p.eventDate) {
+                        const edate = new Date(p.eventDate);
+                        if (edate >= now && edate <= threshold) upcomingCount++;
+                    }
+                }
             } else if (p.type === 'event')   events++;
             else if (p.type === 'hearing') hearings++;
         });
 
         // Update stats
         const s = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
-        s('dash-pending',  pending);
-        s('dash-done',     done);
-        s('dash-events',   events);
-        s('dash-hearings', hearings);
-        s('dash-total-amount', '₱' + total.toLocaleString('en-US', { minimumFractionDigits: 0 }));
+        s('kpi-pending',  pending);
+        s('kpi-upcoming', upcomingCount);
+        s('kpi-released', '₱' + total.toLocaleString('en-US', { notation: 'compact', maximumFractionDigits: 1 }));
 
         // Update label
-        const labelEl = document.getElementById('dash-total-label');
+        const labelEl = document.getElementById('kpi-released-lbl');
         if (labelEl) {
             if (monthFilter === 'all' && yearFilter === 'all') {
-                labelEl.innerText = 'Total Cash Released — All Time';
+                labelEl.innerText = 'Total Released (All Time)';
             } else {
                 const mLabel = monthFilter !== 'all' ? monthNames[parseInt(monthFilter)] : '';
                 const yLabel = yearFilter  !== 'all' ? yearFilter : '';
-                labelEl.innerText = 'Total Cash Released — ' + [mLabel, yLabel].filter(Boolean).join(' ');
+                labelEl.innerText = 'Released: ' + [mLabel, yLabel].filter(Boolean).join(' ');
             }
         }
 
@@ -1402,6 +1531,7 @@ function getQuarterFilter(){const q=document.getElementById('filter-quarter');re
         initCalendar();
         renderSchedulePanel();
         renderTable(getActiveType(), getQuery(), getFilter(), getMonthFilter(), getYearFilter());
+        if (typeof updateAlerts === 'function') updateAlerts();
     }
     function getActiveType(){if(document.getElementById('table-hearing').style.display!=='none')return'hearing';if(document.getElementById('table-event').style.display!=='none')return'event';return'solicitation';}
     function updateCounts(){const c={solicitation:0,event:0,hearing:0};GLOBAL_DATA.forEach(e=>{const t=e.extendedProps?.type;if(c[t]!==undefined)c[t]++;});document.getElementById('cnt-sol').innerText=c.solicitation;document.getElementById('cnt-evt').innerText=c.event;document.getElementById('cnt-hrg').innerText=c.hearing;}
@@ -1722,7 +1852,7 @@ Types: ${typeLabels}`,
     // ── VIEWS ──
     function switchView(v){const cal=document.getElementById('view-calendar'),tbl=document.getElementById('view-table');if(v==='calendar'){cal.style.display='';tbl.style.display='none';setTimeout(()=>calendar&&calendar.render(),50);}else{cal.style.display='none';tbl.style.display='flex';filterData();}syncViewBtns(v);}
     function switchTableTab(type){['solicitation','event','hearing'].forEach(t=>{document.getElementById(`table-${t}`).style.display=t===type?'block':'none';const map={solicitation:'sol',event:'evt',hearing:'hrg'};document.getElementById(`tab-${map[t]}`).classList.toggle('active',t===type);});['filter-status-m','filter-status-d'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=type==='solicitation'?'':'none';});filterData();}
-function filterData(){renderTable(getActiveType(),getQuery(),getFilter(),getMonthFilter(),getYearFilter());}
+    function filterData(){renderTable(getActiveType(),getQuery(),getFilter(),getMonthFilter(),getYearFilter()); if (typeof updateAlerts === 'function') updateAlerts();}
 
     // ── Cycle solicitation sort: date → event-date → received → date ──
     function cycleSolSort() {
@@ -1804,26 +1934,31 @@ function renderTable(type,query="",statusFilter="all",monthFilter="all",yearFilt
         if(!data.length){tbody.innerHTML=`<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-inbox"></i><p>No records found.</p></div></td></tr>`;return;}
         let totalAmount = 0;
         data.forEach(e=>{
-            const p=e.extendedProps||{};const tr=document.createElement('tr');tr.onclick=()=>openModal(e);
+            const p=e.extendedProps||{};const tr=document.createElement('tr');
             if(type==='solicitation'){
+                tr.className = 'status-' + (p.status||'pending');
                 const addr=p.address||[p.brgy,p.town].filter(Boolean).join(', ')||'—';
-                const bc=p.status==='done'?'badge-done':p.status==='declined'?'badge-declined':'badge-pending';
-                const evtDateStr  = p.eventDate ? `<span class="td-date" style="color:#7c3aed">${formatDate(p.eventDate)}</span>`  : '<span style="color:#cbd5e1;font-size:11px">—</span>';
-                const solRcvStr   = e.start     ? `<span class="td-date">${formatDate(e.start)}</span>`                           : '<span style="color:#cbd5e1;font-size:11px">—</span>';
-                const cashRcvStr  = p.dateGiven ? `<span class="td-date" style="color:#0369a1">${formatDate(p.dateGiven)}</span>` : '<span style="color:#cbd5e1;font-size:11px">—</span>';
+                const evtDateStr  = p.eventDate ? `<span class="td-date text-violet">${formatDate(p.eventDate)}</span>`  : '<span class="text-muted" style="font-size:11px">—</span>';
+                const solRcvStr   = e.start     ? `<span class="td-date">${formatDate(e.start)}</span>`                           : '<span class="text-muted" style="font-size:11px">—</span>';
+                const cashRcvStr  = p.dateGiven ? `<span class="td-date text-sky" id="td-cash-${e.id}">${formatDate(p.dateGiven)}</span>` : `<span id="td-cash-${e.id}" class="text-muted" style="font-size:11px">—</span>`;
                 const amt = parseFloat(p.amount||0);
                 totalAmount += amt;
-                tr.innerHTML=`<td class="td-id-c"><span class="td-id">${e.id}</span></td>
-                    <td style="white-space:nowrap">${evtDateStr}</td>
-                    <td class="td-date-c">${solRcvStr}</td>
-                    <td class="td-name-c"><span class="td-name">${e.title}</span></td>
-                    <td style="font-size:12px;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description||'—'}</td>
-                    <td class="td-addr-c"><span class="td-addr">${addr}</span></td>
-                    <td style="white-space:nowrap">${cashRcvStr}</td>
-                    <td class="td-status-c"><span class="badge ${bc}">${p.status}</span></td>
-                    <td class="td-amt-c"><span class="td-amt">₱${amt.toLocaleString('en-US', {minimumFractionDigits: 0})}</span></td>`;
+                tr.innerHTML=`<td class="td-id-c" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))"><span class="td-id">${e.id}</span></td>
+                    <td style="white-space:nowrap" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))">${evtDateStr}</td>
+                    <td class="td-date-c" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))">${solRcvStr}</td>
+                    <td class="td-name-c" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))"><span class="td-name">${e.title}</span></td>
+                    <td style="font-size:12px;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))">${p.description||'—'}</td>
+                    <td class="td-addr-c" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))"><span class="td-addr">${addr}</span></td>
+                    <td style="white-space:nowrap" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))">${cashRcvStr}</td>
+                    <td class="td-status-c">
+                        <select class="inline-status-sel ${p.status||'pending'}" onchange="updateInlineStatus('${e.id}', this.value)">
+                            <option value="pending" ${p.status==='pending'?'selected':''}>Pending</option>
+                            <option value="done" ${p.status==='done'?'selected':''}>Released</option>
+                        </select>
+                    </td>
+                    <td class="td-amt-c" onclick="openModal(GLOBAL_DATA.find(x=>x.id==='${e.id}'))"><span class="td-amt">₱${amt.toLocaleString('en-US', {minimumFractionDigits: 0})}</span></td>`;
             }
-            else{const time=p.time?`<div class="td-sub">${formatTime(p.time)}</div>`:'';tr.innerHTML=`<td class="td-evt-id"><span class="td-id">${e.id}</span></td><td class="td-evt-date"><span class="td-date">${formatDate(e.start)}</span>${time}</td><td class="td-evt-name"><span class="td-name">${e.title}</span></td><td class="td-evt-venue"><span class="td-addr">${p.venue||'—'}</span></td><td class="td-evt-notes" style="color:#64748b;font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description||'—'}</td>`;}
+            else{tr.onclick=()=>openModal(e); const time=p.time?`<div class="td-sub">${formatTime(p.time)}</div>`:'';tr.innerHTML=`<td class="td-evt-id"><span class="td-id">${e.id}</span></td><td class="td-evt-date"><span class="td-date">${formatDate(e.start)}</span>${time}</td><td class="td-evt-name"><span class="td-name">${e.title}</span></td><td class="td-evt-venue"><span class="td-addr">${p.venue||'—'}</span></td><td class="td-evt-notes" style="color:#64748b;font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.description||'—'}</td>`;}
             tbody.appendChild(tr);
         });
         
@@ -3190,12 +3325,15 @@ Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
         if (_dashChart) { _dashChart.destroy(); _dashChart = null; }
         if (typeof Chart === 'undefined') return;
         const ctx = canvas.getContext('2d');
+        const isDark = document.body.classList.contains('dark-mode');
         const font = { family: "'Plus Jakarta Sans',sans-serif", size: 11 };
-        const grid = '#f1f5f9';
+        const grid = isDark ? '#334155' : '#f1f5f9';
+        const tColor = isDark ? '#94a3b8' : '#64748b';
+        Chart.defaults.color = tColor;
 
         if (monthFilter === 'all') {
             const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            const released = new Array(12).fill(0), pending = new Array(12).fill(0), declined = new Array(12).fill(0);
+            const released = new Array(12).fill(0), pending = new Array(12).fill(0);
             GLOBAL_DATA.forEach(e => {
                 const p = e.extendedProps||{}; if (p.type !== 'solicitation') return;
                 let dStr = p.dateGiven || e.start || '';
@@ -3203,15 +3341,13 @@ Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
                 const mi = parseInt(dStr.substring(5,7),10) - 1;
                 if (mi < 0 || mi > 11) return;
                 if (p.status==='done') released[mi] += parseFloat(p.amount||0);
-                else if (p.status==='pending') pending[mi]++;
-                else if (p.status==='declined') declined[mi]++;
+                else pending[mi]++;
             });
             _dashChart = new Chart(ctx, {
                 type:'bar',
                 data:{ labels, datasets:[
                     { label:'Released (₱)', data:released, backgroundColor:'rgba(34,197,94,.7)',  borderColor:'rgba(22,163,74,1)',  borderWidth:1, borderRadius:5, yAxisID:'y'  },
-                    { label:'Pending',       data:pending,  backgroundColor:'rgba(251,191,36,.7)', borderColor:'rgba(217,119,6,1)',  borderWidth:1, borderRadius:5, yAxisID:'y2' },
-                    { label:'Declined',      data:declined, backgroundColor:'rgba(239,68,68,.7)', borderColor:'rgba(185,28,28,1)',  borderWidth:1, borderRadius:5, yAxisID:'y2' }
+                    { label:'Pending',       data:pending,  backgroundColor:'rgba(251,191,36,.7)', borderColor:'rgba(217,119,6,1)',  borderWidth:1, borderRadius:5, yAxisID:'y2' }
                 ]},
                 options:{ responsive:true, interaction:{mode:'index',intersect:false},
                     plugins:{
@@ -3227,7 +3363,7 @@ Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
             });
         } else {
             const mNames=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            let p=0, d=0, x=0;
+            let p=0, d=0;
             GLOBAL_DATA.forEach(e => {
                 const ep=e.extendedProps||{}; if (ep.type!=='solicitation') return;
                 let dStr = ep.dateGiven || e.start || '';
@@ -3239,15 +3375,15 @@ Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
                 } else {
                     if (String(m)!==monthFilter) return;
                 }
-                if (ep.status==='done') d++; else if (ep.status==='pending') p++; else x++;
+                if (ep.status==='done') d++; else p++;
             });
             _dashChart = new Chart(ctx, {
                 type:'bar',
-                data:{ labels:['Pending','Released','Declined'],
+                data:{ labels:['Pending','Released'],
                     datasets:[{ label: (monthFilter.startsWith('q') ? 'Q'+monthFilter.substring(1) : mNames[parseInt(monthFilter)]) + ' Breakdown',
-                        data:[p,d,x],
-                        backgroundColor:['rgba(251,191,36,.75)','rgba(34,197,94,.75)','rgba(239,68,68,.75)'],
-                        borderColor:['rgba(217,119,6,1)','rgba(22,163,74,1)','rgba(185,28,28,1)'],
+                        data:[p,d],
+                        backgroundColor:['rgba(251,191,36,.75)','rgba(34,197,94,.75)'],
+                        borderColor:['rgba(217,119,6,1)','rgba(22,163,74,1)'],
                         borderWidth:1, borderRadius:10
                     }]
                 },
@@ -3314,6 +3450,7 @@ Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
         data.sort((a, b) => {
             if (sortBy === 'event-date') return (a.extendedProps?.eventDate||'9999') < (b.extendedProps?.eventDate||'9999') ? -1 : 1;
             if (sortBy === 'date')       return (a.start||'') < (b.start||'') ? -1 : 1;
+            if (sortBy === 'date-given') return (a.extendedProps?.dateGiven||'9999') < (b.extendedProps?.dateGiven||'9999') ? -1 : 1;
             if (sortBy === 'amount-desc') return parseFloat(b.extendedProps?.amount||0) - parseFloat(a.extendedProps?.amount||0);
             if (sortBy === 'name')       return (a.title||'').localeCompare(b.title||'');
             return 0;
@@ -3462,6 +3599,108 @@ Scheduled for tomorrow — ${niceDateFull(tomorrow)}`,
 
         return headerHTML + summaryHTML + tableHTML + totalRowHTML + footHTML;
     }
+
+    // ── NEW FEATURES (Dark Mode, Inline Toggles, Alerts) ──
+
+    function initTheme() {
+        if (localStorage.getItem('SOLI_DARK_MODE') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+    }
+
+    function toggleTheme() {
+        const isDark = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('SOLI_DARK_MODE', isDark);
+    }
+
+    function updateInlineStatus(id, newStatus) {
+        if (event) event.stopPropagation();
+        const item = GLOBAL_DATA.find(e => e.id === id);
+        if (!item || !item.extendedProps) return;
+        item.extendedProps.status = newStatus;
+        if (newStatus === 'done' && !item.extendedProps.dateGiven) {
+            item.extendedProps.dateGiven = new Date().toISOString().split('T')[0];
+        }
+        saveDataLocally();
+        appAlert('Status Updated', `Solicitation ${id} marked as ${newStatus}.`, 'success');
+    }
+
+    function toggleAlerts() {
+        const dropdown = document.getElementById('alert-dropdown');
+        dropdown.classList.toggle('show');
+    }
+
+    // Close alert dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        const btnD = document.querySelector('.hdr-inline .btn-relative');
+        const btnM = document.querySelector('.hdr-row2 .btn-relative');
+        const dropdown = document.getElementById('alert-dropdown');
+        if (dropdown && dropdown.classList.contains('show') && 
+            (!btnD || !btnD.contains(e.target)) && 
+            (!btnM || !btnM.contains(e.target)) && 
+            !dropdown.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    function updateAlerts() {
+        const now = new Date();
+        const threshold = new Date();
+        threshold.setDate(now.getDate() + 3);
+        
+        let alerts = [];
+        GLOBAL_DATA.forEach(e => {
+            const p = e.extendedProps || {};
+            if (p.type === 'solicitation' && p.status === 'pending' && p.eventDate) {
+                const edate = new Date(p.eventDate);
+                if (edate <= threshold) {
+                    const diffDays = Math.ceil((edate - now) / (1000 * 60 * 60 * 24));
+                    let msg = '';
+                    if (diffDays < 0) msg = `Event passed ${Math.abs(diffDays)} days ago`;
+                    else if (diffDays === 0) msg = 'Event is today!';
+                    else if (diffDays === 1) msg = 'Event is tomorrow!';
+                    else msg = `Event is in ${diffDays} days`;
+                    
+                    alerts.push({
+                        id: e.id,
+                        title: e.title,
+                        msg: msg,
+                        days: diffDays
+                    });
+                }
+            }
+        });
+        
+        alerts.sort((a,b) => a.days - b.days);
+        
+        const badgeD = document.getElementById('alert-badge-d');
+        const badgeM = document.getElementById('alert-badge-m');
+        const body = document.getElementById('alert-body');
+        
+        if (alerts.length > 0) {
+            if (badgeD) { badgeD.style.display = 'block'; badgeD.textContent = alerts.length; }
+            if (badgeM) { badgeM.style.display = 'block'; badgeM.textContent = alerts.length; }
+            
+            let html = '';
+            alerts.forEach(a => {
+                html += `<div class="alert-item" onclick="toggleAlerts(); openModal(GLOBAL_DATA.find(x=>x.id==='${a.id}'))">
+                            <div class="alert-item-title">${a.title}</div>
+                            <div class="alert-item-msg"><i class="fa-regular fa-clock"></i> ${a.msg}</div>
+                         </div>`;
+            });
+            if (body) body.innerHTML = html;
+        } else {
+            if (badgeD) badgeD.style.display = 'none';
+            if (badgeM) badgeM.style.display = 'none';
+            if (body) body.innerHTML = `<div class="alert-empty"><i class="fa-regular fa-circle-check" style="font-size:24px;margin-bottom:8px;display:block;color:#22c55e"></i> You're all caught up!</div>`;
+        }
+    }
+
+    // Call initTheme and updateAlerts on startup
+    document.addEventListener('DOMContentLoaded', () => {
+        initTheme();
+        // filterData() runs shortly after load data, which will call updateAlerts.
+    });
 
     // Register Service Worker for PWA Offline functionality
     if ('serviceWorker' in navigator) {
