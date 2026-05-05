@@ -41,9 +41,10 @@
 
         /* Row 2: Tools row — mobile only */
         .hdr-row2 {
-            display: flex; align-items: center; gap: 8px;
-            padding: 8px 14px;
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px;
             overflow-x: auto; -ms-overflow-style: none; scrollbar-width: none;
+            border-bottom: 1px solid #f1f5f9;
         }
         .hdr-row2::-webkit-scrollbar { display: none; }
 
@@ -300,6 +301,13 @@
         .modal-close:hover { background: #f1f5f9; color: #0f172a; }
         .modal-body { padding: 18px; overflow-y: auto; flex: 1; }
         .modal-foot { padding: 14px 18px; border-top: 1px solid #f1f5f9; display: flex; gap: 9px; align-items: center; flex-shrink: 0; }
+        
+        @media (max-width: 639px) {
+            .modal-head { padding: 12px 16px; }
+            .modal-body { padding: 14px 16px; }
+            .modal-foot { padding: 12px 16px; }
+            .modal-title { font-size: 15px; }
+        }
         .type-sw { display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px; gap: 2px; flex-shrink: 0; }
         .tsw-btn { padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; border: none; background: transparent; color: #94a3b8; transition: all .15s; white-space: nowrap; }
         .tsw-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
@@ -312,7 +320,7 @@
         .fta { resize: none; height: 80px; }
         .fsel option { background: #fff; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 400px) { .form-row { grid-template-columns: 1fr; } }
+        @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; gap: 10px; } }
         .fdiv { height: 1px; background: #f1f5f9; margin: 14px 0; }
         .status-trigger { width: 100%; padding: 13px 16px; border: 2px dashed #e2e8f0; border-radius: 10px; background: none; font-size: 14px; font-weight: 700; color: #64748b; font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all .15s; }
         .status-trigger:hover { border-color: #94a3b8; color: #0f172a; }
